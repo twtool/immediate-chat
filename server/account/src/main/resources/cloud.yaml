@@ -1,0 +1,18 @@
+server:
+  port: 20100
+service:
+  name: AccountService
+polaris:
+  addresses:
+    - polaris.address:8091
+  namespace: immediate-chat
+exposed:
+  url: jdbc:mysql://mysql.address:3306/immediate-chat
+  driver: com.mysql.cj.jdbc.Driver
+  user: root
+  password: root
+redis:
+  host: redis.address
+account:
+  pwd-secret: 14ajn4@ada
+  token-secret: mkw@a21a#
