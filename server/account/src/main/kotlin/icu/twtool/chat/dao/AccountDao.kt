@@ -23,7 +23,7 @@ object AccountDao {
         updateAt = row[Accounts.updateAt],
     )
 
-    suspend fun add(uid: Long, email: String, pwd: String): Boolean = transaction {
+    fun add(uid: Long, email: String, pwd: String): Boolean =
         Accounts.insert {
             it[Accounts.uid] = uid
             it[Accounts.email] = email
@@ -33,14 +33,14 @@ object AccountDao {
             it[createAt] = now
             it[updateAt] = now
         }.insertedCount == 1
-    }
 
-    suspend fun selectByUid(uid: Long): Account? = transaction {
+    fun selectByUid(uid: Long): Account? =
         Accounts.selectAll().where(Accounts.uid eq uid).map(::parseAccount).firstOrNull()
-    }
 
-    suspend fun selectByEmail(email: String): Account? = transaction {
+    fun selectByEmail(email: String): Account? =
         Accounts.selectAll().where(Accounts.email eq email).map(::parseAccount).firstOrNull()
-    }
+
+    fun existsUid(uid: Long): Boolean =
+        Accounts.select(Accounts.id).where(Accounts.uid eq uid).limit(1).count() == 1L
 
 }

@@ -9,19 +9,22 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import icu.twtool.chat.app.AppBottomNavigationBar
 import icu.twtool.chat.app.AppNavHost
 import icu.twtool.chat.app.AppNavigationRail
+import icu.twtool.chat.app.AppTopBar
+import icu.twtool.chat.app.DynamicRoute
+import icu.twtool.chat.app.FriendsRoute
+import icu.twtool.chat.app.LoginRoute
+import icu.twtool.chat.app.MessagesRoute
 import icu.twtool.chat.material.ICScaffold
 import icu.twtool.chat.navigation.rememberNavController
 import icu.twtool.chat.navigation.window.ICWindowSizeClass
 import icu.twtool.chat.navigation.window.ICWindowWidthSizeClass
 import icu.twtool.chat.state.LoggedInState
-import icu.twtool.chat.view.DynamicRoute
-import icu.twtool.chat.view.FriendsRoute
-import icu.twtool.chat.view.LoginRoute
-import icu.twtool.chat.view.MessagesRoute
 
 @Composable
 fun App(
@@ -35,12 +38,18 @@ fun App(
         snackbarHost = {
             SnackbarHost(snackbarHostState)
         },
+        topBar = {
+            AppTopBar(controller, windowSize)
+        },
         bottomBar = {
-            AnimatedVisibility(
-                visible = windowSize.widthSizeClass < ICWindowWidthSizeClass.Expanded &&
+            val visible by derivedStateOf {
+                windowSize.widthSizeClass < ICWindowWidthSizeClass.Expanded &&
                         (controller.current == MessagesRoute ||
                                 controller.current == FriendsRoute ||
-                                controller.current == DynamicRoute),
+                                controller.current == DynamicRoute)
+            }
+            AnimatedVisibility(
+                visible = visible,
                 enter = fadeIn() + expandVertically(),
                 exit = fadeOut() + shrinkVertically()
             ) {

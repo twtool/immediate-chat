@@ -3,4 +3,7 @@ package icu.twtool.chat.navigation
 import androidx.compose.runtime.Immutable
 
 @Immutable
-class NavRoute(val name: String)
+open class NavRoute(val name: String, val top: Boolean = false) {
+
+    open fun onPop() {}
+}

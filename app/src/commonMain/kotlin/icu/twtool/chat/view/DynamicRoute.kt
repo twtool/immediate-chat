@@ -8,8 +8,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import icu.twtool.chat.navigation.NavRoute
 
-val DynamicRoute = NavRoute("Dynamic")
-
 @Composable
 fun DynamicView() {
     Box(Modifier.fillMaxSize().background(Color.Blue))

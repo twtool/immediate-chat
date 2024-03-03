@@ -53,8 +53,6 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 
-val LoginRoute = NavRoute("Login")
-
 @Composable
 fun LoginView(snackbarState: SnackbarHostState, paddingValues: PaddingValues, onSuccess: () -> Unit) {
     LoginContent(

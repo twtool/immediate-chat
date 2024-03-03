@@ -1,13 +1,10 @@
 package icu.twtool.chat.app
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.requiredHeight
-import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -16,7 +13,6 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.PlainTooltip
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
@@ -28,29 +24,22 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import icu.twtool.chat.components.AccountInfoCard
-import icu.twtool.chat.constants.IconDynamic
-import icu.twtool.chat.constants.IconFriend
-import icu.twtool.chat.constants.IconMessage
+import icu.twtool.chat.components.Avatar
 import icu.twtool.chat.navigation.NavRoute
 import icu.twtool.chat.navigation.window.systemBarWindowInsets
 import icu.twtool.chat.state.LoggedInState
 import icu.twtool.chat.theme.ElevationTokens
-import icu.twtool.chat.view.DynamicRoute
-import icu.twtool.chat.view.FriendsRoute
-import icu.twtool.chat.view.MessagesRoute
-import icu.twtool.image.compose.ICAsyncImage
 import icu.twtool.logger.getLogger
 import immediatechat.app.generated.resources.Res
-import immediatechat.app.generated.resources.logo
+import immediatechat.app.generated.resources.ic_dynamic
+import immediatechat.app.generated.resources.ic_friend
+import immediatechat.app.generated.resources.ic_message
 import org.jetbrains.compose.resources.DrawableResource
-import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.vectorResource
 
 private val log = getLogger("icu.twtool.chat.app.AppNavigations.kt")
@@ -58,26 +47,19 @@ private val log = getLogger("icu.twtool.chat.app.AppNavigations.kt")
 @Composable
 fun AppNavigationRail(currentRoute: NavRoute, navigateTo: (NavRoute) -> Unit) {
     NavigationRail(
-        windowInsets = systemBarWindowInsets.only(WindowInsetsSides.Vertical + WindowInsetsSides.Start)
+        windowInsets = systemBarWindowInsets.only(WindowInsetsSides.Vertical + WindowInsetsSides.Start),
+        containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(ElevationTokens.Level2)
     ) {
         var showInfo by remember { mutableStateOf(false) }
-        ICAsyncImage(
-            { null },
-            painterResource(Res.drawable.logo),
-            null,
-            Modifier.size(38.dp).clip(MaterialTheme.shapes.small)
-                .clickable {
-                    showInfo = true
-                }
-                .background(MaterialTheme.colorScheme.surfaceColorAtElevation(ElevationTokens.Level2)),
-            ContentScale.Crop
-        )
+        Avatar(LoggedInState.info?.avatarUrl, 38.dp, MaterialTheme.shapes.small) {
+            showInfo = true
+        }
 
         Spacer(Modifier.requiredHeight(16.dp))
 
-        AppNavigationRailItem(currentRoute, MessagesRoute, navigateTo, IconMessage, "消息")
-        AppNavigationRailItem(currentRoute, FriendsRoute, navigateTo, IconFriend, "好友")
-        AppNavigationRailItem(currentRoute, DynamicRoute, navigateTo, IconDynamic, "动态")
+        AppNavigationRailItem(currentRoute, MessagesRoute, navigateTo, Res.drawable.ic_message, "消息")
+        AppNavigationRailItem(currentRoute, FriendsRoute, navigateTo, Res.drawable.ic_friend, "好友")
+        AppNavigationRailItem(currentRoute, DynamicRoute, navigateTo, Res.drawable.ic_dynamic, "动态")
 
         if (showInfo) {
             Popup(
@@ -125,9 +107,24 @@ private fun AppNavigationRailItem(
 @Composable
 fun AppBottomNavigationBar(currentRoute: NavRoute, navigateTo: (NavRoute) -> Unit) {
     NavigationBar {
-        AppBottomNavigationBarItem(currentRoute == MessagesRoute, { navigateTo(MessagesRoute) }, IconMessage, "消息")
-        AppBottomNavigationBarItem(currentRoute == FriendsRoute, { navigateTo(FriendsRoute) }, IconFriend, "好友")
-        AppBottomNavigationBarItem(currentRoute == DynamicRoute, { navigateTo(DynamicRoute) }, IconDynamic, "动态")
+        AppBottomNavigationBarItem(
+            currentRoute == MessagesRoute,
+            { navigateTo(MessagesRoute) },
+            Res.drawable.ic_message,
+            "消息"
+        )
+        AppBottomNavigationBarItem(
+            currentRoute == FriendsRoute,
+            { navigateTo(FriendsRoute) },
+            Res.drawable.ic_friend,
+            "好友"
+        )
+        AppBottomNavigationBarItem(
+            currentRoute == DynamicRoute,
+            { navigateTo(DynamicRoute) },
+            Res.drawable.ic_dynamic,
+            "动态"
+        )
     }
 }
 

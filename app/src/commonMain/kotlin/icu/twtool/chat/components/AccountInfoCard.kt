@@ -1,7 +1,6 @@
 package icu.twtool.chat.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -9,10 +8,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -46,14 +43,7 @@ fun AccountInfoCard(info: AccountInfo?) {
                 return@Surface
             }
             Row {
-                ICAsyncImage(
-                    { null },
-                    painterResource(Res.drawable.logo),
-                    null,
-                    Modifier.size(48.dp).clip(MaterialTheme.shapes.small)
-                        .background(MaterialTheme.colorScheme.surfaceColorAtElevation(ElevationTokens.Level2)),
-                    ContentScale.Crop
-                )
+                Avatar(info.avatarUrl, 48.dp, MaterialTheme.shapes.small)
                 Spacer(Modifier.requiredWidth(16.dp))
                 Column {
                     Text(info.nickname ?: "未命名用户", style = MaterialTheme.typography.titleSmall)

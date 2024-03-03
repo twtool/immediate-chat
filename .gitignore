@@ -16,6 +16,7 @@ local.properties
 out/
 !**/src/main/**/out/
 !**/src/test/**/out/
+*.private.env.json
 
 ### Eclipse ###
 .apt_generated

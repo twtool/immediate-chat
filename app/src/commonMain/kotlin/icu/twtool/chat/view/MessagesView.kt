@@ -8,8 +8,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import icu.twtool.chat.navigation.NavRoute
 
-val MessagesRoute = NavRoute("Messages")
-
 @Composable
 fun MessagesView() {
     Box(Modifier.fillMaxSize().background(Color.Red))
