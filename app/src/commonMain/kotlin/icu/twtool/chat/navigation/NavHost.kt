@@ -3,7 +3,6 @@ package icu.twtool.chat.navigation
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.keyframes
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -13,22 +12,30 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.unit.IntSize
+import icu.twtool.chat.navigation.window.ICWindowSizeClass
 import icu.twtool.chat.navigation.window.ICWindowWidthSizeClass
 
 class NavHostBuilder {
 
-    private val navMap = mutableMapOf<NavRoute, @Composable (PaddingValues) -> Unit>()
+    private val navMap = mutableMapOf<NavRoute, @Composable (NavHostState, PaddingValues) -> Unit>()
     private val windowWidthSizeNavMap = mapOf(
-        ICWindowWidthSizeClass.Compact to mutableMapOf<NavRoute, @Composable (PaddingValues) -> Unit>(),
-        ICWindowWidthSizeClass.Medium to mutableMapOf<NavRoute, @Composable (PaddingValues) -> Unit>(),
-        ICWindowWidthSizeClass.Expanded to mutableMapOf<NavRoute, @Composable (PaddingValues) -> Unit>()
+        ICWindowWidthSizeClass.Compact to mutableMapOf<NavRoute, @Composable (NavHostState, PaddingValues) -> Unit>(),
+        ICWindowWidthSizeClass.Medium to mutableMapOf<NavRoute, @Composable (NavHostState, PaddingValues) -> Unit>(),
+        ICWindowWidthSizeClass.Expanded to mutableMapOf<NavRoute, @Composable (NavHostState, PaddingValues) -> Unit>()
     )
 
-    fun get(route: NavRoute, windowWidthSize: ICWindowWidthSizeClass? = null): @Composable (PaddingValues) -> Unit {
-        return windowWidthSizeNavMap[windowWidthSize]?.get(route) ?: navMap[route] ?: {}
+    fun get(
+        route: NavRoute,
+        windowWidthSize: ICWindowWidthSizeClass? = null
+    ): @Composable (NavHostState, PaddingValues) -> Unit {
+        return windowWidthSizeNavMap[windowWidthSize]?.get(route) ?: navMap[route] ?: { _, _ -> }
     }
 
-    fun composable(route: NavRoute, windowWidthSize: ICWindowWidthSizeClass? = null, content: @Composable (PaddingValues) -> Unit) {
+    fun composable(
+        route: NavRoute,
+        windowWidthSize: ICWindowWidthSizeClass? = null,
+        content: @Composable (NavHostState, PaddingValues) -> Unit
+    ) {
         if (windowWidthSize == null) navMap[route] = content
         else windowWidthSizeNavMap[windowWidthSize]?.put(route, content)
     }
@@ -37,13 +44,13 @@ class NavHostBuilder {
 @Immutable
 data class NavHostState(
     val route: NavRoute,
-    val windowWidthSize: ICWindowWidthSizeClass? = null
+    val windowSize: ICWindowSizeClass,
 )
 
 @Composable
 fun NavHost(
     controller: NavController,
-    windowWidthSize: ICWindowWidthSizeClass? = null,
+    windowWidthSize: ICWindowSizeClass,
     paddingValues: PaddingValues,
     configure: NavHostBuilder.() -> Unit
 ) {
@@ -60,6 +67,6 @@ fun NavHost(
             }
         }
     ) {
-        builder.get(it.route, it.windowWidthSize)(paddingValues)
+        builder.get(it.route, it.windowSize.widthSizeClass)(it, paddingValues)
     }
 }

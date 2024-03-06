@@ -4,7 +4,7 @@ import icu.twtool.chat.server.account.model.FriendRequest
 import icu.twtool.chat.server.account.model.FriendRequestStatus
 import icu.twtool.chat.server.account.vo.AccountInfo
 import icu.twtool.chat.server.account.vo.FriendRequestVO
-import icu.twtool.chat.server.common.datetime.now
+import icu.twtool.chat.server.common.datetime.nowUTC
 import icu.twtool.chat.tables.Accounts
 import icu.twtool.chat.tables.FriendRequests
 import kotlinx.datetime.LocalDateTime
@@ -36,7 +36,7 @@ object FriendRequestDao {
             it[FriendRequests.msg] = msg
             it[status] = FriendRequestStatus.REQUEST
 
-            val now = LocalDateTime.now()
+            val now = LocalDateTime.nowUTC()
             it[createAt] = now
             it[updateAt] = now
         }.insertedCount == 1

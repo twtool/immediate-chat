@@ -1,6 +1,5 @@
 package icu.twtool.chat.app
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.expandVertically
@@ -10,6 +9,8 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -31,6 +32,7 @@ import icu.twtool.chat.navigation.NavController
 import icu.twtool.chat.navigation.NavRoute
 import icu.twtool.chat.navigation.window.ICWindowSizeClass
 import icu.twtool.chat.navigation.window.ICWindowWidthSizeClass
+import icu.twtool.chat.navigation.window.systemBarWindowInsets
 import icu.twtool.chat.state.LoggedInState
 import icu.twtool.chat.theme.ElevationTokens
 import immediatechat.app.generated.resources.Res
@@ -100,7 +102,8 @@ fun NewFriendTopBar(colors: TopAppBarColors, onBack: () -> Unit) {
                 Text("添加好友")
             }
         },
-        colors = colors
+        colors = colors,
+        windowInsets = systemBarWindowInsets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
     )
 }
 
@@ -122,7 +125,8 @@ fun CenterTitleAndBackAppBar(colors: TopAppBarColors, title: String, onBack: () 
                 Icon(painterResource(Res.drawable.ic_back), "返回")
             }
         },
-        colors = colors
+        colors = colors,
+        windowInsets = systemBarWindowInsets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
     )
 }
 
@@ -147,6 +151,7 @@ fun LoggedInAccountTopBar(colors: TopAppBarColors) {
                 }
             }
         },
-        colors = colors
+        colors = colors,
+        windowInsets = systemBarWindowInsets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
     )
 }

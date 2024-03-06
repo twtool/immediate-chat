@@ -1,0 +1,27 @@
+CREATE TABLE TbMessage
+(
+    id            INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    loggedUID     INTEGER                           NOT NULL,
+    uid           INTEGER                           NOT NULL,
+    lastMessageId INTEGER,
+    createAt      INTEGER                           NOT NULL,
+    updateAT      INTEGER                           NOT NULL
+);
+
+CREATE UNIQUE INDEX tb_message_ui_logged_uid_uid ON TbMessage (loggedUID, uid);
+
+upsertByLoggedUIDAndID {
+UPDATE TbMessage
+SET updateAT = :now
+WHERE loggedUID = :loggedUID
+  AND uid = :uid;
+
+INSERT OR IGNORE INTO TbMessage (loggedUID, uid, createAt, updateAT)
+VALUES (:loggedUID, :uid, :now, :now);
+}
+
+selectMessageItemByLoggedUID:
+SELECT tm.uid, tmd.message, tm.updateAT, tmd.updateAt, nickname, avatarUrl
+FROM (SELECT * FROM TbMessage WHERE loggedUID = :loggedUID) AS tm
+         JOIN TbFriend AS tf ON tm.loggedUID = tf.loggedUID AND tm.uid == tf.uid
+         LEFT OUTER JOIN TbMessageDetails AS tmd ON tm.lastMessageId = tmd.id;

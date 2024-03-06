@@ -1,7 +1,6 @@
 package icu.twtool.chat.state
 
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
 import icu.twtool.chat.server.account.AccountService
 import icu.twtool.chat.server.account.vo.FriendRequestVO

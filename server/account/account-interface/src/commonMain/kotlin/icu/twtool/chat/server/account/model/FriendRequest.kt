@@ -1,6 +1,7 @@
 package icu.twtool.chat.server.account.model
 
-import icu.twtool.chat.server.common.datetime.now
+import icu.twtool.chat.server.common.datetime.currentEpochSeconds
+import icu.twtool.chat.server.common.datetime.epochSeconds
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
 
@@ -23,10 +24,10 @@ data class FriendRequest(
 
     companion object {
 
-        const val VALID_SECONDS: Int = 7 * 24 * 60 * 60
+        const val VALID_SECONDS: Long = 7 * 24 * 60 * 60
     }
 
     fun isValid(): Boolean {
-        return (LocalDateTime.now().second - createAt.second) < VALID_SECONDS
+        return (currentEpochSeconds() - createAt.epochSeconds()) < VALID_SECONDS
     }
 }

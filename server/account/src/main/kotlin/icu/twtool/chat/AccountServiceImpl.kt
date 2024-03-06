@@ -86,6 +86,14 @@ class AccountServiceImpl(application: KtorCloudApplication) : AccountService {
         FriendRequestDao.add(account.uid, param.uid, param.msg.trim()).result()
     }
 
+    override suspend fun getFriendList(token: String): Res<List<AccountInfo>> {
+        val account = Jwt.parse(token).payload.account
+
+        return db.transaction {
+            FriendDao.selectListByUID(account.uid)
+        }.result()
+    }
+
     override suspend fun acceptFriendRequest(token: String, param: FriendAcceptParam): Res<Unit> = db.transaction {
         val account = Jwt.parse(token).payload.account
 

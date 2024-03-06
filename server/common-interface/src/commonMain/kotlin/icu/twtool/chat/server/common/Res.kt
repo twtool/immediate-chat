@@ -1,10 +1,7 @@
 package icu.twtool.chat.server.common
 
-import kotlinx.serialization.SerialInfo
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
-import org.intellij.lang.annotations.Language
 
 @Serializable
 data class Res<T : Any>(

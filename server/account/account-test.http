@@ -30,3 +30,7 @@ token: {{TOKEN100001}}
 ### 获取好友请求列表
 GET {{host}}/account/friend-request-list?offset=0
 token: {{TOKEN100000}}
+
+### 获取好友列表
+GET {{host}}/account/friend-list
+token: {{TOKEN100000}}

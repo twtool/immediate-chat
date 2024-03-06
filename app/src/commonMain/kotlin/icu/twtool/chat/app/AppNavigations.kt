@@ -42,8 +42,6 @@ import immediatechat.app.generated.resources.ic_message
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.vectorResource
 
-private val log = getLogger("icu.twtool.chat.app.AppNavigations.kt")
-
 @Composable
 fun AppNavigationRail(currentRoute: NavRoute, navigateTo: (NavRoute) -> Unit) {
     NavigationRail(
@@ -93,7 +91,7 @@ private fun AppNavigationRailItem(
         rememberTooltipState()
     ) {
         NavigationRailItem(
-            currentRoute == route,
+            currentRoute == route || currentRoute.parent == route,
             onClick = {
                 navigateTo(route)
             },

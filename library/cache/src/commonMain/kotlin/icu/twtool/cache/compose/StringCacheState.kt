@@ -7,7 +7,7 @@ import androidx.compose.runtime.setValue
 import kotlin.reflect.KProperty
 
 @Stable
-class StringCacheState constructor(
+class StringCacheState(
     private val key: String,
     value: String? = null
 ) : CacheState() {

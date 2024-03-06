@@ -1,9 +1,8 @@
 package icu.twtool.chat.dao
 
 import icu.twtool.chat.server.account.model.Account
-import icu.twtool.chat.server.common.datetime.now
+import icu.twtool.chat.server.common.datetime.nowUTC
 import icu.twtool.chat.tables.Accounts
-import icu.twtool.ktor.cloud.exposed.transaction
 import kotlinx.datetime.LocalDateTime
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -29,7 +28,7 @@ object AccountDao {
             it[Accounts.email] = email
             it[Accounts.pwd] = pwd
 
-            val now = LocalDateTime.now()
+            val now = LocalDateTime.nowUTC()
             it[createAt] = now
             it[updateAt] = now
         }.insertedCount == 1

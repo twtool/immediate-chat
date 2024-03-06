@@ -1,5 +1,3 @@
-import org.gradle.kotlin.dsl.support.kotlinCompilerOptions
-import org.jetbrains.compose.ExperimentalComposeLibrary
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 
@@ -7,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsCompose)
+    alias(libs.plugins.sqldelight)
 }
 
 
@@ -14,7 +13,6 @@ kotlin {
     @OptIn(ExperimentalKotlinGradlePluginApi::class)
     compilerOptions {
         optIn.add("org.jetbrains.compose.resources.ExperimentalResourceApi")
-//        freeCompilerArgs.add("")
     }
     androidTarget {
         compilations.all {
@@ -32,6 +30,8 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation(libs.androidx.appcompat)
             implementation(libs.androidx.window)
+
+            implementation(libs.sqldelight.driver.android)
         }
 
         commonMain.dependencies {
@@ -39,22 +39,30 @@ kotlin {
             implementation(projects.library.cache)
             implementation(projects.library.logger)
             implementation(projects.library.asyncImage)
-//            implementation(projects.library.navigation)
 
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.ui)
             implementation(compose.material3)
 
-            @OptIn(ExperimentalComposeLibrary::class)
             implementation(compose.components.resources)
 
             implementation(libs.ktor.cloud.client.kmp)
+            implementation(libs.sqldelight.runtime)
         }
 
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.logback)
+            implementation(libs.sqldelight.driver.sqlite)
+        }
+    }
+}
+
+sqldelight  {
+    databases {
+        create("Database") {
+            packageName.set("icu.twtool.chat.database")
         }
     }
 }

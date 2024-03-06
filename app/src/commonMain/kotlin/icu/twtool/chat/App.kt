@@ -25,12 +25,17 @@ import icu.twtool.chat.navigation.rememberNavController
 import icu.twtool.chat.navigation.window.ICWindowSizeClass
 import icu.twtool.chat.navigation.window.ICWindowWidthSizeClass
 import icu.twtool.chat.state.LoggedInState
+import icu.twtool.chat.utils.ICBackHandler
 
 @Composable
 fun App(
     windowSize: ICWindowSizeClass,
 ) {
     val controller = rememberNavController(if (LoggedInState.token == null) LoginRoute else MessagesRoute)
+
+    ICBackHandler(!controller.empty) {
+        controller.pop()
+    }
 
     val snackbarHostState = remember { SnackbarHostState() }
 

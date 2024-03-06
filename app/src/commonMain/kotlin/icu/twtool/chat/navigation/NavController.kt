@@ -7,9 +7,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import icu.twtool.chat.app.MessagesRoute
-import icu.twtool.logger.getLogger
-
-private val log = getLogger("icu.twtool.chat.navigation.NavController")
 
 @Stable
 class NavController(initial: NavRoute) {
@@ -17,25 +14,29 @@ class NavController(initial: NavRoute) {
     var current by mutableStateOf(initial)
         private set
 
+    var empty by mutableStateOf(false)
+        private set
+
     private val stack = mutableListOf<NavRoute>()
 
-    fun navigateTo(route: NavRoute) {
+    fun navigateTo(route: NavRoute, customStack: List<NavRoute>? = null) {
         if (current == route) return
-        if (!route.top) stack.add(current)
+        if (customStack != null) {
+            stack.clear()
+            stack.addAll(customStack)
+        } else if (!route.top) stack.add(current)
         else stack.clear()
         current = route
+
+        empty = stack.isEmpty()
     }
 
     fun pop() {
-        log.info("===== start =====")
-        log.info("current = $current")
-        log.info("stack = $stack")
         val pop = current
         current = stack.removeLastOrNull() ?: MessagesRoute
         pop.onPop()
-        log.info("current = $current")
-        log.info("stack = $stack")
-        log.info("===== end =====")
+
+        empty = stack.isEmpty()
     }
 
 }

@@ -1,0 +1,39 @@
+CREATE TABLE TbFriend
+(
+    id        INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    loggedUID INTEGER                           NOT NULL,
+    uid       INTEGER                           NOT NULL,
+    nickname  TEXT,
+    avatarUrl TEXT,
+    createAt  INTEGER                           NOT NULL,
+    updateAt  INTEGER                           NOT NULL
+);
+
+CREATE UNIQUE INDEX tb_friend_ui_logged_uid_uid ON TbFriend (loggedUID, uid);
+
+-- SELECT
+selectAllByLoggedUid:
+SELECT *
+FROM TbFriend
+WHERE loggedUID = ?;
+
+-- DELETE
+deleteByLoggedUidAndUid:
+DELETE
+FROM TbFriend
+WHERE (loggedUID = ?)
+  AND (uid IN ?);
+
+-- INSERT
+insertOne:
+INSERT INTO TbFriend(loggedUID, uid, nickname, avatarUrl, createAt, updateAt)
+VALUES (?, ?, ?, ?, ?, ?);
+
+-- UPDATE
+updateByLoggedUidAndUid:
+UPDATE TbFriend
+SET nickname  = ?,
+    avatarUrl = ?,
+    updateAt = ?
+WHERE (loggedUID = ?)
+  AND (uid = ?);

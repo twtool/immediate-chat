@@ -53,6 +53,12 @@ interface AccountService {
     @RequestMapping(HttpMethod.Get, "friend-request-list")
     suspend fun getFriendRequestList(@Header token: String, @Query offset: String): Res<List<FriendRequestVO>>
 
+    /**
+     * 获取好友列表
+     */
+    @RequestMapping(HttpMethod.Get, "friend-list")
+    suspend fun getFriendList(@Header token: String): Res<List<AccountInfo>>
+
     companion object
 }
 

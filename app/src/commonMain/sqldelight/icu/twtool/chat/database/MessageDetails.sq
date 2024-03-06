@@ -1,0 +1,9 @@
+CREATE TABLE TbMessageDetails
+(
+    id        INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    loggedUID INTEGER                           NOT NULL,
+    uid       INTEGER                           NOT NULL,
+    message   TEXT                              NOT NULL,
+    createAt  INTEGER                           NOT NULL,
+    updateAt  INTEGER                           NOT NULL
+);

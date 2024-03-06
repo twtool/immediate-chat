@@ -5,7 +5,6 @@ import com.tencent.mmkv.MMKV
 import icu.twtool.logger.getLogger
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
-import org.slf4j.LoggerFactory
 import kotlin.reflect.KType
 
 private val log = getLogger("icu.twtool.cache.Cache.android.kt")
