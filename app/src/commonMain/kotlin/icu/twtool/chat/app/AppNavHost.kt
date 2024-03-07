@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
@@ -19,6 +20,7 @@ import icu.twtool.chat.navigation.window.ICWindowSizeClass
 import icu.twtool.chat.navigation.window.ICWindowWidthSizeClass
 import icu.twtool.chat.view.AcceptFriendRequestView
 import icu.twtool.chat.view.AccountInfoView
+import icu.twtool.chat.view.ChatSettingsView
 import icu.twtool.chat.view.ChatView
 import icu.twtool.chat.view.DynamicView
 import icu.twtool.chat.view.FriendsView
@@ -50,11 +52,21 @@ fun AppNavHost(
                         state.windowSize,
                         navigateToChatRoute = { controller.navigateTo(ChatRoute, listOf(MessagesRoute)) })
                 },
-                { ChatView(onBack = { controller.pop() }) }
+                {
+                    ChatView(
+                        state.windowSize.widthSizeClass,
+                        onBack = { controller.pop() },
+                        navigateToChatSettingsRoute = {
+                            // TODO
+                        })
+                }
             )
         }
-        composable(ChatRoute) { _, _ ->
-            ChatView(onBack = { controller.pop() })
+        composable(ChatRoute) { state, _ ->
+            ChatView(state.windowSize.widthSizeClass, onBack = { controller.pop() },
+                navigateToChatSettingsRoute = {
+                    // TODO
+                })
         }
         composable(ChatRoute, ICWindowWidthSizeClass.Expanded) { state, paddingValues ->
             TwoPanel(
@@ -64,8 +76,16 @@ fun AppNavHost(
                         state.windowSize,
                         navigateToChatRoute = { controller.navigateTo(ChatRoute, listOf(MessagesRoute)) })
                 },
-                { ChatView(onBack = { controller.pop() }) }
+                {
+                    ChatView(
+                        state.windowSize.widthSizeClass,
+                        onBack = { controller.pop() },
+                        navigateToChatSettingsRoute = {})
+                }
             )
+        }
+        composable(ChatSettingsRoute) { _, paddingValues ->
+            ChatSettingsView(Modifier.padding(paddingValues))
         }
         composable(FriendsRoute) { _, paddingValues ->
             FriendsView(snackbarHostState, paddingValues, controller::navigateTo)

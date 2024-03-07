@@ -27,11 +27,11 @@ fun ICAsyncImage(
     contentScale: ContentScale = ContentScale.None,
 ) {
 
-    val image: Painter? by produceState(placeholder) {
+    val image: Painter? by produceState<Painter?>(null) {
         withContext(Dispatchers.IO) {
-            data()?.let {
-                value = BitmapPainter(it.encodedToImageBitmap())
-            }
+            value = data()?.let {
+                BitmapPainter(it.encodedToImageBitmap())
+            } ?: placeholder
         }
     }
 

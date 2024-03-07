@@ -41,6 +41,8 @@ object ChatRoute : NavRoute("Chat", false, MessagesRoute) {
     }
 }
 
+val ChatSettingsRoute = NavRoute("ChatSettings", false, title = "聊天设置")
+
 val FriendsRoute = NavRoute("Friends", true)
 val NewFriendRoute = NavRoute("NewFriend", false, FriendsRoute)
 

@@ -16,6 +16,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,6 +35,8 @@ import icu.twtool.chat.constants.ApplicationDir
 import icu.twtool.chat.navigation.window.calculateWindowSizeClass
 import icu.twtool.chat.navigation.window.systemBarHeight
 import icu.twtool.chat.theme.ICTheme
+import icu.twtool.chat.utils.KeyEventStore
+import icu.twtool.chat.utils.LocalKeyEventStore
 import icu.twtool.chat.utils.loadLibrary
 
 fun main() = application {
@@ -46,47 +49,59 @@ fun main() = application {
         width = 840.dp,
     )
 
-    Window(
-        ::exitApplication, state = windowState,
-        title = "即时聊天",
-        icon = painterResource("drawable/logo.xml"),
-        transparent = true, undecorated = true
-    ) {
-        val windowSize = calculateWindowSizeClass(windowState)
-
-        var showExitDialog by remember { mutableStateOf(false) }
-
-        if (showExitDialog) {
-            AlertDialog(
-                onDismissRequest = { showExitDialog = false },
-                title = { Text("确认退出？") },
-                confirmButton = {
-                    TextButton({exitApplication()}) {
-                        Text("确认")
-                    }
+    CompositionLocalProvider(LocalKeyEventStore provides KeyEventStore()) {
+        val store = LocalKeyEventStore.current
+        Window(
+            ::exitApplication,
+            state = windowState,
+            title = "即时聊天",
+            icon = painterResource("drawable/logo.xml"),
+            transparent = true, undecorated = true,
+            onPreviewKeyEvent = on@{
+                for (handler in store.get()) {
+                    if (handler(it)) return@on true
                 }
-            )
-        }
+                false
+            },
+        ) {
 
-        ICTheme {
-            Surface(Modifier.fillMaxSize(), shape = MaterialTheme.shapes.small) {
-                Box {
-                    App(windowSize)
-                    WindowDraggableArea(Modifier.height(systemBarHeight).fillMaxWidth()) {
-                        Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
-                            Spacer(Modifier.weight(1f, true))
-                            Icon(
-                                Icons.Filled.Close,
-                                "",
-                                Modifier.clickable {
-                                    showExitDialog = true
-                                }.padding(4.dp).size(16.dp)
-                            )
+            val windowSize = calculateWindowSizeClass(windowState)
+
+            var showExitDialog by remember { mutableStateOf(false) }
+
+            if (showExitDialog) {
+                AlertDialog(
+                    onDismissRequest = { showExitDialog = false },
+                    title = { Text("确认退出？") },
+                    confirmButton = {
+                        TextButton({ exitApplication() }) {
+                            Text("确认")
+                        }
+                    }
+                )
+            }
+
+            ICTheme {
+                Surface(Modifier.fillMaxSize(), shape = MaterialTheme.shapes.small) {
+                    Box {
+                        App(windowSize)
+                        WindowDraggableArea(Modifier.height(systemBarHeight).fillMaxWidth()) {
+                            Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
+                                Spacer(Modifier.weight(1f, true))
+                                Icon(
+                                    Icons.Filled.Close,
+                                    "",
+                                    Modifier.clickable {
+                                        showExitDialog = true
+                                    }.padding(4.dp).size(16.dp)
+                                )
+                            }
                         }
                     }
                 }
             }
-        }
 
+        }
     }
+
 }
