@@ -6,14 +6,14 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import icu.twtool.chat.app.AppBottomNavigationBar
 import icu.twtool.chat.app.AppNavHost
 import icu.twtool.chat.app.AppNavigationRail
@@ -27,7 +27,6 @@ import icu.twtool.chat.navigation.rememberNavController
 import icu.twtool.chat.navigation.window.ICWindowSizeClass
 import icu.twtool.chat.navigation.window.ICWindowWidthSizeClass
 import icu.twtool.chat.state.LoggedInState
-import icu.twtool.chat.state.WebSocketState
 import icu.twtool.chat.utils.ICBackHandler
 
 @Composable
@@ -43,6 +42,7 @@ fun App(
     val snackbarHostState = remember { SnackbarHostState() }
 
     ICScaffold(
+        Modifier.imePadding(),
         snackbarHost = {
             SnackbarHost(snackbarHostState)
         },
