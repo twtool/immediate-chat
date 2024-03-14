@@ -1,11 +1,16 @@
 package icu.twtool.chat.view
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -44,6 +49,7 @@ import icu.twtool.chat.navigation.window.ICWindowWidthSizeClass
 import icu.twtool.chat.server.account.vo.AccountInfo
 import icu.twtool.chat.state.MessageItem
 import icu.twtool.chat.state.MessagesViewState
+import icu.twtool.chat.state.WebSocketState
 import icu.twtool.chat.theme.DisabledAlpha
 import icu.twtool.chat.theme.ElevationTokens
 import kotlinx.coroutines.launch
@@ -51,10 +57,10 @@ import kotlinx.coroutines.launch
 @Composable
 fun MessageViewItem(item: MessageItem, onClick: () -> Unit, selected: Boolean) {
     Surface(selected, onClick) {
-        Row(Modifier.padding(16.dp)) {
+        Row(Modifier.padding(16.dp).height(IntrinsicSize.Min)) {
             Avatar(item.avatarUrl, 42.dp)
             Spacer(Modifier.requiredWidth(8.dp))
-            Column {
+            Column(Modifier.fillMaxHeight(), verticalArrangement = Arrangement.SpaceBetween) {
                 Row {
                     val nickname = item.nickname ?: "未命名用户"
                     Text(
@@ -91,16 +97,27 @@ fun MessagesView(paddingValues: PaddingValues, windowSize: ICWindowSizeClass, na
         state.loadList()
     }
 
-    val topPadding = when (windowSize.widthSizeClass) {
-        ICWindowWidthSizeClass.Expanded -> 4.dp
-        else -> 16.dp
-    }
+    val topPadding = animateDpAsState(
+        if (windowSize.widthSizeClass == ICWindowWidthSizeClass.Expanded && WebSocketState.error.value == null) 4.dp
+        else 16.dp
+    )
 
     var searchInput by remember { mutableStateOf("") }
 
     Column(Modifier.fillMaxSize().padding(paddingValues)) {
+        AnimatedVisibility(WebSocketState.error.value != null) {
+            Surface(
+                Modifier.padding(top = if (windowSize.widthSizeClass == ICWindowWidthSizeClass.Expanded) 4.dp else 0.dp),
+                color = MaterialTheme.colorScheme.errorContainer,
+                contentColor = MaterialTheme.colorScheme.onErrorContainer,
+            ) {
+                Row(Modifier.fillMaxWidth().padding(16.dp, 12.dp)) {
+                    Text(WebSocketState.error.value ?: "")
+                }
+            }
+        }
         Row(
-            Modifier.padding(start = 16.dp, end = 16.dp, top = topPadding, bottom = 16.dp)
+            Modifier.padding(start = 16.dp, top = topPadding.value, bottom = 16.dp, end = 16.dp)
                 .fillMaxWidth()
                 .height(32.dp)
                 .clip(MaterialTheme.shapes.extraSmall)

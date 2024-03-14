@@ -42,4 +42,9 @@ object AccountDao {
     fun existsUid(uid: Long): Boolean =
         Accounts.select(Accounts.id).where(Accounts.uid eq uid).limit(1).count() == 1L
 
+    fun selectAvatarUrlByUID(uid: Long) =
+        Accounts.select(Accounts.avatarUrl).where(Accounts.uid eq uid).limit(1)
+            .map { it[Accounts.avatarUrl] }
+            .firstOrNull()
+
 }

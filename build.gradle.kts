@@ -12,6 +12,7 @@ plugins {
     alias(libs.plugins.androidLibrary) apply false
 
     alias(libs.plugins.jetbrainsCompose) apply false
+    alias(libs.plugins.shadow) apply false
     alias(libs.plugins.sqldelight) apply false
 }
 

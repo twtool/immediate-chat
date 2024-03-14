@@ -12,3 +12,8 @@ fun LocalDateTime.Companion.now(timeZone: TimeZone) = Clock.System.now().toLocal
 fun LocalDateTime.epochSeconds(timeZone: TimeZone = TimeZone.UTC): Long = toInstant(timeZone).epochSeconds
 
 fun currentEpochSeconds(): Long = Clock.System.now().epochSeconds
+
+fun LocalDateTime.currentTimeZone(
+    timeZone: TimeZone = TimeZone.currentSystemDefault(),
+    originalTimeZone: TimeZone = TimeZone.UTC
+): LocalDateTime = toInstant(originalTimeZone).toLocalDateTime(timeZone)

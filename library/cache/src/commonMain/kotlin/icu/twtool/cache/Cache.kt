@@ -30,7 +30,7 @@ interface Cache {
     fun get(key: String, type: KType): Any?
 }
 
-inline operator fun <reified T : Any> Cache.set(key: String, value: T): Boolean = set(key, value, typeOf<T>())
+inline operator fun <reified T : Any> Cache.set(key: String, value: T?): Boolean = set(key, value, typeOf<T>())
 inline operator fun <reified T : Any> Cache.get(key: String): T? = get(key, typeOf<T>()) as? T
 
 expect fun getCache(): Cache

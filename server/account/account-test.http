@@ -3,7 +3,7 @@ POST {{host}}/account/login
 Content-Type: application/json
 
 {
-  "principal": "twat131@qq.com",
+  "principal": "100000",
   "pwd": "123456"
 }
 

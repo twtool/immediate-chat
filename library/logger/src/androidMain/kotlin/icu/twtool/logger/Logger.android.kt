@@ -8,7 +8,7 @@ class AndroidLogger(private val tag: String) : Logger {
         Log.i(tag, msg)
     }
 
-    override fun error(msg: String, error: Throwable) {
+    override fun error(msg: String, error: Throwable?) {
         Log.e(tag, msg, error)
     }
 }

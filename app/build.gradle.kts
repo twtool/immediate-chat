@@ -36,6 +36,8 @@ kotlin {
 
         commonMain.dependencies {
             implementation(projects.server.account.accountInterface)
+            implementation(projects.server.chat.chatInterface)
+            implementation(projects.server.gateway.gatewayInterface)
             implementation(projects.library.cache)
             implementation(projects.library.logger)
             implementation(projects.library.asyncImage)
@@ -44,10 +46,12 @@ kotlin {
             implementation(compose.foundation)
             implementation(compose.ui)
             implementation(compose.material3)
+//            implementation(compose.material)
 
             implementation(compose.components.resources)
 
             implementation(libs.ktor.cloud.client.kmp)
+            implementation(libs.ktor.cloud.client.kmp.websocket)
             implementation(libs.sqldelight.runtime)
         }
 
@@ -59,7 +63,7 @@ kotlin {
     }
 }
 
-sqldelight  {
+sqldelight {
     databases {
         create("Database") {
             packageName.set("icu.twtool.chat.database")
@@ -88,18 +92,31 @@ android {
         }
     }
 
+    signingConfigs {
+        create("immediate-chat") {
+            storeFile = file("${System.getProperty("user.home")}/immediate-chat.jks")
+            storePassword = "immediate-chat"
+            keyAlias = "immediate-chat"
+            keyPassword = "immediate-chat"
+        }
+    }
+
     buildFeatures {
         buildConfig = true
     }
 
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("immediate-chat")
             isMinifyEnabled = false
             buildConfigField("String", "SERVER_PROTOCOL", "\"https\"")
+            buildConfigField("String", "SERVER_WEBSOCKET_PROTOCOL", "\"wss\"")
             buildConfigField("String", "SERVER_HOST", "\"ic.twtool.icu\"")
-            buildConfigField("Integer", "SERVER_PORT", "80")
+            buildConfigField("Integer", "SERVER_PORT", "443")
         }
         debug {
+            signingConfig = signingConfigs.getByName("immediate-chat")
+            buildConfigField("String", "SERVER_WEBSOCKET_PROTOCOL", "\"ws\"")
             buildConfigField("String", "SERVER_PROTOCOL", "\"http\"")
             buildConfigField("String", "SERVER_HOST", "\"10.0.2.2\"")
             buildConfigField("Integer", "SERVER_PORT", "20000")

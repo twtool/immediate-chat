@@ -7,3 +7,4 @@ actual fun protocol(): URLProtocol = URLProtocol.HTTP
 actual fun host(): String = "localhost"
 
 actual fun port(): Int = 20000
+actual fun websocketProtocol(): URLProtocol = URLProtocol.WS

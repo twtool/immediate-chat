@@ -7,3 +7,4 @@ actual fun protocol(): URLProtocol = URLProtocol.createOrDefault(BuildConfig.SER
 actual fun host(): String = BuildConfig.SERVER_HOST
 actual fun port(): Int = BuildConfig.SERVER_PORT
 
+actual fun websocketProtocol(): URLProtocol = URLProtocol.createOrDefault(BuildConfig.SERVER_WEBSOCKET_PROTOCOL)

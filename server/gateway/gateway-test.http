@@ -1,0 +1,10 @@
+### WEBSOCKE
+WEBSOCKET {{wsHost}}/ws
+Content-Type: application/json
+Authorization: Bearer {{TOKEN100001}}
+
+===
+{
+  "type": "AUTH",
+  "content": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOiIyMDI0LTA0LTEzVDA0OjAzOjU5LjQxNTUwNjAwNyIsImFjY291bnQiOnsidWlkIjoxMDAwMDEsIm5pY2tuYW1lIjpudWxsLCJhdmF0YXJVcmwiOiJodHRwczovL2ljLnR3dG9vbC5pY3UvaW1ncy8yMDI0MDMxNDExMTcyNS5qcGcifX0=.dd1ef6fc0f1de51179d05864c360e20c4337a2c525e3825fb84a67ff7b0187e3"
+}

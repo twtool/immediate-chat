@@ -10,7 +10,7 @@ class DesktopLogger(tag: String) : Logger {
         log.info(msg)
     }
 
-    override fun error(msg: String, error: Throwable) {
+    override fun error(msg: String, error: Throwable?) {
         log.error(msg, error)
     }
 }

@@ -3,7 +3,10 @@ package icu.twtool.chat.state
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.mutableStateListOf
 import icu.twtool.chat.database.database
+import icu.twtool.chat.server.chat.model.MessageContent
+import icu.twtool.chat.server.chat.vo.MessageVO
 import icu.twtool.chat.server.common.datetime.now
+import icu.twtool.chat.utils.JSON
 import icu.twtool.chat.utils.tryLockRun
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
@@ -53,7 +56,8 @@ class MessagesViewState {
                 val systemTZ = TimeZone.currentSystemDefault()
                 val systemNow = LocalDateTime.now(systemTZ)
                 database.messageQueries.selectMessageItemByLoggedUID(loggedUID) { uid, message, updateAt, messageUpdateAt, nickname, avatarUrl ->
-                    val updateAtInstant = Instant.fromEpochSeconds(maxOf(updateAt, messageUpdateAt ?: 0))
+                    val decodedMessage = message?.let { JSON.decodeFromString<MessageVO>(it).content }?.toString()
+                    val updateAtInstant = Instant.fromEpochSeconds(messageUpdateAt ?: updateAt)
                     val updateAtTime = updateAtInstant.toLocalDateTime(systemTZ)
                     val time = if (updateAtTime.date == systemNow.date) updateAtTime.format(MessageTimeTimeFormat)
                     else updateAtTime.format(MessageTimeDateFormat)
@@ -61,7 +65,7 @@ class MessagesViewState {
                         uid = uid,
                         avatarUrl = avatarUrl,
                         nickname = nickname,
-                        message = message,
+                        message = decodedMessage,
                         updateAt = time
                     )
                 }.executeAsList().let {

@@ -24,6 +24,7 @@ logback = "1.4.14"
 mmkv = "1.3.3"
 mmkv-jvm = "1.0-SNAPSHOT"
 mysql = "8.3.0"
+shadow = "8.1.1"
 slf4j-api = "2.0.11"
 snakeyaml = "2.2"
 sqldelight = "2.0.1"
@@ -51,14 +52,18 @@ ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor"
 
 ktor-cloud-application = { module = "icu.twtool.ktor.cloud:application", version.ref = "ktor-cloud" }
 ktor-cloud-client-kmp = { module = "icu.twtool.ktor.cloud:client-kmp", version.ref = "ktor-cloud" }
+ktor-cloud-client-kmp-websocket = { module = "icu.twtool.ktor.cloud:client-kmp-websocket", version.ref = "ktor-cloud" }
+ktor-cloud-client-service = { module = "icu.twtool.ktor.cloud:client-service", version.ref = "ktor-cloud" }
 ktor-cloud-discovery-polaris = { module = "icu.twtool.ktor.cloud:discovery-polaris", version.ref = "ktor-cloud" }
 ktor-cloud-exposed = { module = "icu.twtool.ktor.cloud:exposed", version.ref = "ktor-cloud" }
 ktor-cloud-redis = { module = "icu.twtool.ktor.cloud:redis", version.ref = "ktor-cloud" }
+ktor-cloud-plugin-rocketmq = { module = "icu.twtool.ktor.cloud:plugin-rocketmq", version.ref = "ktor-cloud" }
 ktor-cloud-http-core = { module = "icu.twtool.ktor.cloud:http-core", version.ref = "ktor-cloud" }
 ktor-cloud-http-ksp = { module = "icu.twtool.ktor.cloud:http-ksp", version.ref = "ktor-cloud" }
 ktor-cloud-route-service = { module = "icu.twtool.ktor.cloud:route-service", version.ref = "ktor-cloud" }
 ktor-cloud-route-service-ksp = { module = "icu.twtool.ktor.cloud:route-service-ksp", version.ref = "ktor-cloud" }
 ktor-cloud-route-gateway = { module = "icu.twtool.ktor.cloud:route-gateway", version.ref = "ktor-cloud" }
+ktor-cloud-route-websocket = { module = "icu.twtool.ktor.cloud:route-websocket", version.ref = "ktor-cloud" }
 
 logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 mmkv = { module = "com.tencent:mmkv", version.ref = "mmkv" }
@@ -83,9 +88,7 @@ kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref =
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
-
 ktor = { id = "io.ktor.plugin", version.ref = "ktor" }
-
 jetbrainsCompose = { id = "org.jetbrains.compose", version.ref = "compose-plugin" }
-
+shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow" }
 sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }

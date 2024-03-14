@@ -7,3 +7,11 @@ CREATE TABLE TbMessageDetails
     createAt  INTEGER                           NOT NULL,
     updateAt  INTEGER                           NOT NULL
 );
+
+insertOne:
+INSERT INTO TbMessageDetails(loggedUID, uid, message, createAt, updateAt)
+VALUES (?, ?, ?, ?, ?);
+
+selectNew:
+SELECT * FROM TbMessageDetails
+WHERE loggedUID = :loggedUID AND uid = :uid AND id > :id ORDER BY id DESC;

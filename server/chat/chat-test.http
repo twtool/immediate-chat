@@ -1,0 +1,15 @@
+### 发送消息
+POST {{host}}/chat/send-message
+Content-Type: application/json
+Authorization: Bearer {{TOKEN100001}}}}
+
+{
+  "addressee": {
+    "type": "icu.twtool.chat.server.chat.model.AccountMessageAddressee",
+    "uid": 100000
+  },
+  "content": {
+    "type": "icu.twtool.chat.server.chat.model.PlainMessageContent",
+    "value": "Hello World"
+  }
+}

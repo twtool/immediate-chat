@@ -1,5 +1,6 @@
 **/polaris/logs
 **/polaris/backup
+/app/release/
 
 .gradle
 build/

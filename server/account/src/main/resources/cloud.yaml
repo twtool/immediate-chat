@@ -7,7 +7,7 @@ polaris:
     - polaris.address:8091
   namespace: immediate-chat
 exposed:
-  url: jdbc:mysql://mysql.address:3306/immediate-chat
+  url: jdbc:mysql://mysql.address:3306/ic-account
   driver: com.mysql.cj.jdbc.Driver
   user: root
   password: root

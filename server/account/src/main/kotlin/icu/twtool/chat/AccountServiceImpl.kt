@@ -56,7 +56,7 @@ class AccountServiceImpl(application: KtorCloudApplication) : AccountService {
         else Res.success(generateToken(account.toInfo()))
     }
 
-    override suspend fun auth(param: AuthParam): Res<Unit> {
+    override suspend fun auth(param: AuthParam): Res<Long> {
         return verifyToken(param.token).result()
     }
 
@@ -69,6 +69,11 @@ class AccountServiceImpl(application: KtorCloudApplication) : AccountService {
 
         if (result) Res.success(generateToken(AccountInfo(uid, null, null)))
         else Res.error(msg = "注册失败，请联系开发人员")
+    }
+
+    override suspend fun getInfoByUID(uid: String): Res<AccountInfo> {
+        val uidLong = uid.toLongOrNull() ?: return Res.error(CommonStatus.ParamErr)
+        return db.transaction { AccountDao.selectByUid(uidLong)?.toInfo() }.result()
     }
 
     override suspend fun sendFriendRequest(token: String, param: FriendRequestParam): Res<Unit> = db.transaction {
@@ -148,10 +153,12 @@ class AccountServiceImpl(application: KtorCloudApplication) : AccountService {
         return DigestUtils.sha3_512Hex(pwd + pwdSecret)
     }
 
-    private fun verifyToken(token: String): Boolean {
+    private fun verifyToken(token: String): Long? {
         val arr = token.split('.')
-        if (arr.size != 3) return false
-        return tokenHmacUtils.hmacHex("${arr[0]}.${arr[1]}") == arr[2]
+        if (arr.size != 3) return null
+        val result = tokenHmacUtils.hmacHex("${arr[0]}.${arr[1]}") == arr[2]
+        if (!result) return null
+        return Jwt.parse(token).payload.account.uid
     }
 
     @OptIn(ExperimentalEncodingApi::class)

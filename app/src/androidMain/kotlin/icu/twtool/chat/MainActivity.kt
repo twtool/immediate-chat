@@ -1,5 +1,6 @@
 package icu.twtool.chat
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -13,6 +14,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.i("MainActivity", "onCreate")
         super.onCreate(savedInstanceState)
+
+        startService(Intent(this, WebSocketService::class.java))
 
         setContent {
             val windowSize = calculateWindowSizeClass(this)

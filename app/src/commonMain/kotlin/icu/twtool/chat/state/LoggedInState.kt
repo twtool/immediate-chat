@@ -13,7 +13,10 @@ object LoggedInState {
         private set
 
     fun login(token: String?) {
-        if (token != null) info = Jwt.parse(token).payload.account
+        if (token != null) {
+            info = Jwt.parse(token).payload.account
+            WebSocketState.auth()
+        }
         this.token = token
     }
 }

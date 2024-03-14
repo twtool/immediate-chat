@@ -20,6 +20,16 @@ INSERT OR IGNORE INTO TbMessage (loggedUID, uid, createAt, updateAT)
 VALUES (:loggedUID, :uid, :now, :now);
 }
 
+updateLastMessageId:
+UPDATE TbMessage
+SET lastMessageId = (SELECT id
+                     FROM TbMessageDetails
+                     WHERE loggedUID = :loggedUID AND uid = :friendUID
+                     ORDER BY id DESC
+                     LIMIT 1)
+WHERE loggedUID = :loggedUID
+  AND uid = :friendUID;
+
 selectMessageItemByLoggedUID:
 SELECT tm.uid, tmd.message, tm.updateAT, tmd.updateAt, nickname, avatarUrl
 FROM (SELECT * FROM TbMessage WHERE loggedUID = :loggedUID) AS tm

@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.util.distsDirectory
+
 plugins {
     alias(libs.plugins.kotlinJvm)
     alias(libs.plugins.ksp)
@@ -5,6 +7,8 @@ plugins {
 
     application
 }
+
+version = "0.0.1"
 
 application {
     mainClass.set("icu.twtool.chat.ApplicationKt")
@@ -25,4 +29,17 @@ dependencies {
     implementation(libs.mysql)
 
     ksp(libs.ktor.cloud.route.service.ksp)
+}
+
+tasks.create("upload") {
+    dependsOn("distTar")
+    doLast {
+        exec {
+            commandLine(
+                "scp",
+                distsDirectory.file(project.name + "-" + project.version + ".tar").get().asFile.absolutePath,
+                "root@cloud.pc:/root/workspace/immediate-chat/${project.name}/"
+            )
+        }
+    }
 }

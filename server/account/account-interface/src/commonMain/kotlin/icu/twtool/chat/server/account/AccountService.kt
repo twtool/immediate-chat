@@ -24,10 +24,13 @@ interface AccountService {
     suspend fun login(@Body param: LoginParam): Res<String>
 
     @RequestMapping(HttpMethod.Post, "auth")
-    suspend fun auth(@Body param: AuthParam): Res<Unit>
+    suspend fun auth(@Body param: AuthParam): Res<Long>
 
     @RequestMapping(HttpMethod.Post, "register")
     suspend fun register(@Body param: RegisterParam): Res<String>
+
+    @RequestMapping(HttpMethod.Get, "info-by-uid")
+    suspend fun getInfoByUID(@Query uid: String): Res<AccountInfo>
 
     /**
      * 发起好友申请

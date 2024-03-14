@@ -6,3 +6,9 @@ polaris:
   addresses:
     - polaris.address:8091
   namespace: immediate-chat
+rocketmq:
+  endpoint: rocketmq.address:8081
+  consumer:
+    group: GatewayService
+gateway:
+  id: CHAT_1
