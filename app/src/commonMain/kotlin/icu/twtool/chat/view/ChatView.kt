@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -55,11 +56,19 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.Popup
+import icu.twtool.chat.app.AccountInfoRoute
 import icu.twtool.chat.app.ChatRoute
 import icu.twtool.chat.cache.loadAccountInfo
+import icu.twtool.chat.components.AccountInfoCard
 import icu.twtool.chat.components.Avatar
 import icu.twtool.chat.components.BackTopAppBar
+import icu.twtool.chat.components.WindowDialog
 import icu.twtool.chat.navigation.window.ICWindowWidthSizeClass
 import icu.twtool.chat.server.account.vo.AccountInfo
 import icu.twtool.chat.server.chat.model.MessageContent
@@ -94,7 +103,9 @@ fun ChatView(
     widthSizeClass: ICWindowWidthSizeClass,
     paddingValues: PaddingValues,
     onBack: () -> Unit,
-    navigateToChatSettingsRoute: () -> Unit
+    navigateToChatSettingsRoute: () -> Unit,
+    navigateChatRoute: () -> Unit,
+    navigateAccountInfoRoute: () -> Unit,
 ) {
     val info = ChatRoute.info ?: return
     val scope = rememberCoroutineScope()
@@ -113,7 +124,13 @@ fun ChatView(
         ) {
             Column(Modifier.fillMaxSize()) {
                 Box(Modifier.weight(1f)) {
-                    ChatViewMessages(state, Modifier.fillMaxWidth())
+                    ChatViewMessages(
+                        widthSizeClass,
+                        state,
+                        navigateChatRoute,
+                        navigateAccountInfoRoute,
+                        Modifier.fillMaxWidth()
+                    )
                 }
                 if (widthSizeClass < ICWindowWidthSizeClass.Expanded)
                     ChatViewInput(state.sending, paddingValues) {
@@ -135,10 +152,17 @@ fun ChatView(
 }
 
 @Composable
-fun ChatViewMessageItem(item: ChatMessageItem) {
+fun ChatViewMessageItem(
+    widthSizeClass: ICWindowWidthSizeClass,
+    item: ChatMessageItem,
+    onLookInfo: (AccountInfo?) -> Unit,
+    navigateChatRoute: (AccountInfo?) -> Unit
+) {
     val info by produceState<AccountInfo?>(null) {
         value = if (item.me) LoggedInState.info else loadAccountInfo(item.message.sender)
     }
+
+    val showPopup = remember { mutableStateOf(false) }
 
     val placeholder = remember {
         movableContentOf {
@@ -148,11 +172,32 @@ fun ChatViewMessageItem(item: ChatMessageItem) {
     val avatar = remember(info) {
         movableContentOf {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Avatar(info?.avatarUrl, 42.dp)
+                Avatar(info?.avatarUrl, 42.dp) {
+                    if (widthSizeClass == ICWindowWidthSizeClass.Expanded) showPopup.value = true
+                    else onLookInfo(info)
+                }
                 SelectionContainer {
                     Text(
                         item.message.createTime.currentTimeZone().format(MessageTimeTimeFormat),
                         style = MaterialTheme.typography.labelSmall
+                    )
+                }
+                if (showPopup.value) info?.let {
+                    AccountInfoCardPopup(
+                        it,
+                        onDismissRequest = { showPopup.value = false },
+                        onLookInfoClick = {
+                            showPopup.value = false
+                            onLookInfo(info)
+                        },
+                        onSendClick = {
+                            showPopup.value = false
+                            navigateChatRoute(info)
+                        },
+                        DpOffset(if (item.me) (-52).dp else 52.dp, 0.dp),
+                        if (item.me) Alignment.TopEnd else Alignment.TopStart,
+                        showOpenChat = false
+//                        showOpenChat = item.me
                     )
                 }
             }
@@ -184,19 +229,63 @@ fun ChatViewMessageItem(item: ChatMessageItem) {
 }
 
 @Composable
-fun ChatViewMessages(state: ChatViewState, modifier: Modifier = Modifier) {
+fun ChatViewMessages(
+    widthSizeClass: ICWindowWidthSizeClass,
+    state: ChatViewState,
+    navigateChatRoute: () -> Unit,
+    navigateAccountInfoRoute: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val scope = rememberCoroutineScope()
     val lazyListState = rememberLazyListState()
     LaunchedEffect(state.messages.size) {
         lazyListState.animateScrollToItem(0)
     }
+
+    var showChangeAccountInfoDialog by remember { mutableStateOf(false) }
+
+    if (showChangeAccountInfoDialog) {
+        WindowDialog(
+            "编辑资料",
+            { showChangeAccountInfoDialog = false }, Modifier.width(400.dp),
+            properties = DialogProperties(dismissOnClickOutside = false)
+        ) {
+            Box(Modifier.fillMaxHeight(0.8f)) {
+                ChangeAccountInfoView(
+                    paddingValues = PaddingValues(),
+                    onBack = { showChangeAccountInfoDialog = false }
+                )
+            }
+        }
+    }
+
     LazyColumn(
         modifier,
         state = lazyListState,
         reverseLayout = true,
         contentPadding = PaddingValues(16.dp)
     ) {
-        items(state.messages, key = { it.id }) {
-            ChatViewMessageItem(it)
+        items(state.messages, key = { it.id }) { item ->
+            ChatViewMessageItem(
+                widthSizeClass,
+                item,
+                onLookInfo = {
+                    if (widthSizeClass == ICWindowWidthSizeClass.Expanded && item.me) showChangeAccountInfoDialog = true
+                    else {
+                        AccountInfoRoute.info = it
+                        navigateAccountInfoRoute()
+                    }
+                },
+                navigateChatRoute = {
+                    it?.let { info ->
+                        scope.launch {
+                            ChatRoute.open(info) {
+                                navigateChatRoute()
+                            }
+                        }
+                    }
+                }
+            )
         }
     }
 }
@@ -216,7 +305,6 @@ fun ChatViewIcon(tooltip: String, icon: Painter) {
         Icon(icon, tooltip, Modifier.size(20.dp))
     }
 }
-
 
 @Composable
 fun ChatViewExpandedInput(sending: Boolean, paddingValues: PaddingValues, onSend: (value: MessageContent) -> Unit) {
@@ -296,6 +384,30 @@ fun ChatViewInput(sending: Boolean, paddingValues: PaddingValues, onSend: (value
     }
 }
 
+@Composable
+private fun AccountInfoCardPopup(
+    info: AccountInfo,
+    onDismissRequest: () -> Unit,
+    onLookInfoClick: () -> Unit,
+    onSendClick: () -> Unit,
+    offset: DpOffset = DpOffset(0.dp, 0.dp),
+    alignment: Alignment = Alignment.TopStart,
+    showOpenChat: Boolean = true
+) {
+    Popup(
+        offset = with(LocalDensity.current) { IntOffset(offset.x.roundToPx(), offset.y.roundToPx()) },
+        onDismissRequest = onDismissRequest,
+        alignment = alignment
+    ) {
+        AccountInfoCard(
+            info,
+            lookInfoText = if (info.uid == LoggedInState.info?.uid) "编辑资料" else "查看资料",
+            onLookInfoClick = onLookInfoClick,
+            onSendClick = onSendClick,
+            showOpenChat = showOpenChat
+        )
+    }
+}
 
 @Composable
 fun BoxScope.ChatSettingsPopup(show: Boolean, onChangeFocused: (Boolean) -> Unit) {

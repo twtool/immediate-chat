@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.only
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -44,11 +46,12 @@ enum class TopBarState {
     LoggedInAccount,
     NewFriend,
     AcceptFriendRequest,
+    Title
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AppTopBar(controller: NavController, windowSize: ICWindowSizeClass) {
+fun AppTopBar(controller: NavController, windowSize: ICWindowSizeClass, onClickAdd: () -> Unit) {
     val currentRoute: NavRoute = controller.current
     val visible by derivedStateOf {
         windowSize.widthSizeClass < ICWindowWidthSizeClass.Expanded &&
@@ -71,14 +74,16 @@ fun AppTopBar(controller: NavController, windowSize: ICWindowSizeClass) {
                 MessagesRoute, FriendsRoute, DynamicRoute -> TopBarState.LoggedInAccount
                 NewFriendRoute -> TopBarState.NewFriend
                 AcceptFriendRequestRoute -> TopBarState.AcceptFriendRequest
+                ChatSettingsRoute, ChangeAccountInfoRoute -> TopBarState.Title
                 else -> TopBarState.None
             }
         }
         Crossfade(state) {
             when (it) {
-                TopBarState.LoggedInAccount -> LoggedInAccountTopBar(colors)
+                TopBarState.LoggedInAccount -> LoggedInAccountTopBar(colors, onClickAdd)
                 TopBarState.NewFriend -> NewFriendTopBar(colors, onBack = { controller.pop() })
                 TopBarState.AcceptFriendRequest -> AcceptFriendRequestTopBar(colors) { controller.pop() }
+                TopBarState.Title -> CenterTitleAndBackAppBar(colors, currentRoute.title ?: "") { controller.pop() }
                 TopBarState.None -> {}
             }
         }
@@ -132,7 +137,7 @@ fun CenterTitleAndBackAppBar(colors: TopAppBarColors, title: String, onBack: () 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoggedInAccountTopBar(colors: TopAppBarColors) {
+fun LoggedInAccountTopBar(colors: TopAppBarColors, onClickAdd: () -> Unit) {
     val info = LoggedInState.info
 
     TopAppBar(
@@ -149,6 +154,11 @@ fun LoggedInAccountTopBar(colors: TopAppBarColors) {
                         style = MaterialTheme.typography.labelSmall,
                     )
                 }
+            }
+        },
+        actions = {
+            IconButton(onClickAdd) {
+                Icon(Icons.Filled.Add, "add")
             }
         },
         colors = colors,

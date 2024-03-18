@@ -22,7 +22,7 @@ class Jwt(
     class Payload(
         // 过期时间
         val exp: LocalDateTime,
-        val account: AccountInfo
+        val uid: Long
     )
 
     companion object {

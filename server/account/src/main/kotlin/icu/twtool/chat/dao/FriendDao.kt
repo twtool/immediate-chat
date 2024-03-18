@@ -29,6 +29,13 @@ object FriendDao {
                 )
             }
 
+    fun selectUIDListByUID(uid: Long): List<Long> =
+        Friends.select(Friends.friendUID)
+            .where(Friends.uid eq uid)
+            .map {
+                it[Friends.friendUID]
+            }
+
     fun add(uid: Long, friendUID: Long): Boolean =
         Friends.insert {
             it[Friends.uid] = uid

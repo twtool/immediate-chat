@@ -15,7 +15,7 @@ class KeyEventStore {
         store.remove(handler)
     }
 
-    fun get(): List<(KeyEvent) -> Boolean> = store.toList()
+    fun get(): List<(KeyEvent) -> Boolean> = store.toList().reversed()
 }
 
 val LocalKeyEventStore = compositionLocalOf<KeyEventStore> { error("not provided") }

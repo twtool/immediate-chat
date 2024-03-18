@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -31,6 +32,24 @@ fun Avatar(
         Modifier.size(size).clip(shape)
             .background(MaterialTheme.colorScheme.secondaryContainer)
             .run { if (onClick != null) clickable(onClick = onClick) else this },
+        contentScale = ContentScale.Crop
+    )
+}
+
+@Composable
+fun Avatar(
+    avatar: Painter? = null,
+    size: Dp = 32.dp,
+    shape: Shape = MaterialTheme.shapes.extraSmall,
+    modifier: Modifier = Modifier
+) {
+    ICAsyncImage(
+        avatar,
+        "Avatar",
+        painterResource(Res.drawable.logo),
+        Modifier.size(size).clip(shape)
+            .background(MaterialTheme.colorScheme.secondaryContainer)
+            .then(modifier),
         contentScale = ContentScale.Crop
     )
 }

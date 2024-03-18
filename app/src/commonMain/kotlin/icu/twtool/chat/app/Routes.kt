@@ -20,9 +20,11 @@ val MessagesRoute = NavRoute("Messages", true)
 @Stable
 object ChatRoute : NavRoute("Chat", false, MessagesRoute) {
     var info by mutableStateOf<AccountInfo?>(null)
+        private set
+    private val stack = mutableListOf<AccountInfo>()
 
     override fun onPop() {
-        info = null
+        info = stack.removeLastOrNull()
     }
 
     suspend fun open(info: AccountInfo, opened: () -> Unit) {
@@ -34,6 +36,7 @@ object ChatRoute : NavRoute("Chat", false, MessagesRoute) {
                 uid = info.uid
             )
             withContext(Dispatchers.Default) {
+                ChatRoute.info?.let { stack.add(it) }
                 ChatRoute.info = info
                 opened()
             }
@@ -55,8 +58,11 @@ object AcceptFriendRequestRoute : NavRoute("AcceptFriendRequest", false, Friends
 }
 
 val DynamicRoute = NavRoute("Dynamic", true)
+val PublishDynamicRoute = NavRoute("Dynamic", false, DynamicRoute)
 
 @Stable
 object AccountInfoRoute : NavRoute("AccountInfo", false, FriendsRoute) {
     var info: AccountInfo? by mutableStateOf(null)
 }
+
+val ChangeAccountInfoRoute = NavRoute("ChangeAccountInfo", false, title = "编辑资料")

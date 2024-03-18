@@ -13,6 +13,7 @@ kotlin {
     @OptIn(ExperimentalKotlinGradlePluginApi::class)
     compilerOptions {
         optIn.add("org.jetbrains.compose.resources.ExperimentalResourceApi")
+        freeCompilerArgs.add("-Xcontext-receivers")
     }
     androidTarget {
         compilations.all {
@@ -24,29 +25,35 @@ kotlin {
 
     jvm("desktop")
 
+
     sourceSets {
         val desktopMain by getting
+
         androidMain.dependencies {
             implementation(libs.androidx.activity.compose)
             implementation(libs.androidx.appcompat)
             implementation(libs.androidx.window)
 
             implementation(libs.sqldelight.driver.android)
+
+            implementation(libs.accompanist.permissions)
         }
 
         commonMain.dependencies {
             implementation(projects.server.account.accountInterface)
             implementation(projects.server.chat.chatInterface)
             implementation(projects.server.gateway.gatewayInterface)
+            implementation(projects.server.dynamic.dynamicInterface)
+            implementation(projects.server.cos.cosInterface)
             implementation(projects.library.cache)
             implementation(projects.library.logger)
             implementation(projects.library.asyncImage)
+            implementation(projects.library.cosKmp)
 
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.ui)
             implementation(compose.material3)
-//            implementation(compose.material)
 
             implementation(compose.components.resources)
 

@@ -16,6 +16,7 @@ application {
 
 dependencies {
     implementation(projects.server.account.accountInterface)
+    implementation(projects.server.account.accountInterceptor)
 
     implementation(libs.exposed.jdbc)
     implementation(libs.exposed.kotlin.datetime)

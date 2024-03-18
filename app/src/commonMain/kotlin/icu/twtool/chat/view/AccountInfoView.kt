@@ -22,6 +22,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,9 +32,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import icu.twtool.chat.app.AccountInfoRoute
 import icu.twtool.chat.app.ChatRoute
+import icu.twtool.chat.cache.produceAccountInfoState
 import icu.twtool.chat.components.Avatar
 import icu.twtool.chat.components.BackTopAppBar
 import icu.twtool.chat.navigation.window.systemBarWindowInsets
+import icu.twtool.chat.state.LoggedInState
 import icu.twtool.chat.theme.DisabledAlpha
 import icu.twtool.chat.theme.ElevationTokens
 import immediatechat.app.generated.resources.Res
@@ -63,23 +66,25 @@ fun AccessibleItem(icon: Painter, text: String, onClick: () -> Unit, modifier: M
 }
 
 @Composable
-fun AccountInfoView(onBack: () -> Unit, navigateToChatRoute: () -> Unit) {
+fun AccountInfoView(onBack: () -> Unit, navigateToChatRoute: () -> Unit, navigateToChangeAccountInfo: () -> Unit) {
     val info = AccountInfoRoute.info ?: return
+    val newInfo by produceAccountInfoState(info)
+    val me = info.uid == LoggedInState.info?.uid
 
     val windowInsets = systemBarWindowInsets
     val scope = rememberCoroutineScope()
 
     Column(Modifier.fillMaxSize()) {
-        AccountInfoTopAppBar(onBack, info.nickname ?: "未命名用户") // TODO：显示备注
+        AccountInfoTopAppBar(onBack, newInfo.nickname ?: "未命名用户") // TODO：显示备注
 
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
             Row(Modifier.padding(16.dp)) {
-                Avatar(info.avatarUrl, 42.dp)
+                Avatar(newInfo.avatarUrl, 42.dp)
                 Spacer(Modifier.requiredWidth(16.dp))
                 Column {
-                    Text(info.nickname ?: "未命名用户", style = MaterialTheme.typography.titleMedium)
+                    Text(newInfo.nickname ?: "未命名用户", style = MaterialTheme.typography.titleMedium)
                     Text(
-                        "UID ${info.uid}",
+                        "UID ${newInfo.uid}",
                         style = MaterialTheme.typography.labelMedium,
                         color = LocalContentColor.current.copy(alpha = DisabledAlpha)
                     )
@@ -100,12 +105,14 @@ fun AccountInfoView(onBack: () -> Unit, navigateToChatRoute: () -> Unit) {
         Row(Modifier.fillMaxWidth().padding(16.dp)) {
             Button({
                 scope.launch {
-                    ChatRoute.open(info) {
+                    if (me) {
+                        navigateToChangeAccountInfo()
+                    } else ChatRoute.open(newInfo) {
                         navigateToChatRoute()
                     }
                 }
             }, Modifier.weight(1f)) {
-                Text("发起聊天")
+                Text(if (me) "编辑资料" else "发起聊天")
             }
         }
         Spacer(Modifier.requiredHeight(with(LocalDensity.current) { windowInsets.getBottom(this).toDp() }))

@@ -4,6 +4,7 @@ import icu.twtool.chat.dao.AccountDao
 import icu.twtool.chat.dao.FriendDao
 import icu.twtool.chat.dao.FriendRequestDao
 import icu.twtool.chat.server.account.AccountService
+import icu.twtool.chat.server.account.interceptor.loggedUID
 import icu.twtool.chat.server.account.jwt.Jwt
 import icu.twtool.chat.server.account.model.FriendRequestStatus
 import icu.twtool.chat.server.account.param.AuthParam
@@ -12,11 +13,15 @@ import icu.twtool.chat.server.account.param.FriendRejectParam
 import icu.twtool.chat.server.account.param.FriendRequestParam
 import icu.twtool.chat.server.account.param.LoginParam
 import icu.twtool.chat.server.account.param.RegisterParam
+import icu.twtool.chat.server.account.param.UpdateInfoParam
 import icu.twtool.chat.server.account.status.AccountStatus
 import icu.twtool.chat.server.account.vo.AccountInfo
 import icu.twtool.chat.server.account.vo.FriendRequestVO
 import icu.twtool.chat.server.common.CommonStatus
 import icu.twtool.chat.server.common.Res
+import icu.twtool.chat.server.common.assertNotNull
+import icu.twtool.chat.server.common.assertTrue
+import icu.twtool.chat.server.common.checkParam
 import icu.twtool.chat.server.common.result
 import icu.twtool.chat.tables.FriendRequests
 import icu.twtool.ktor.cloud.KtorCloudApplication
@@ -71,81 +76,110 @@ class AccountServiceImpl(application: KtorCloudApplication) : AccountService {
         else Res.error(msg = "注册失败，请联系开发人员")
     }
 
+    override suspend fun updateInfo(param: UpdateInfoParam): Res<AccountInfo> {
+        checkParam((param.nickname?.length ?: 0) <= 16) { "用户昵称需要小于 16 个字符" }
+        val loggedUID = loggedUID()
+
+        val info = AccountInfo(
+            uid = loggedUID,
+            nickname = param.nickname,
+            avatarUrl = param.avatarUrl
+        )
+
+        val result = db.transaction { AccountDao.updateInfoByUID(info) }
+
+        return if (result) Res.success(info)
+        else Res.error()
+    }
+
     override suspend fun getInfoByUID(uid: String): Res<AccountInfo> {
         val uidLong = uid.toLongOrNull() ?: return Res.error(CommonStatus.ParamErr)
         return db.transaction { AccountDao.selectByUid(uidLong)?.toInfo() }.result()
     }
 
-    override suspend fun sendFriendRequest(token: String, param: FriendRequestParam): Res<Unit> = db.transaction {
-        if (!FriendRequests.verifyMsg(param.msg))
-            return@transaction Res.error(CommonStatus.ParamErr, "验证信息不能大于 255 字符")
-
-        val account = Jwt.parse(token).payload.account
-        if (!AccountDao.existsUid(param.uid)) return@transaction Res.error(AccountStatus.AccountNotExists)
-
-        val record = FriendRequestDao.last(account.uid, param.uid)
-        if (record != null && record.status == FriendRequestStatus.REQUEST && record.isValid()) {
-            return@transaction Res.error(msg = "请等待对方验证")
-        }
-        // TODO: 发送好友申请推送
-        FriendRequestDao.add(account.uid, param.uid, param.msg.trim()).result()
-    }
-
-    override suspend fun getFriendList(token: String): Res<List<AccountInfo>> {
-        val account = Jwt.parse(token).payload.account
+    override suspend fun sendFriendRequest(param: FriendRequestParam): Res<Unit> {
+        checkParam(FriendRequests.verifyMsg(param.msg)) { "验证信息不能大于 255 字符" }
+        val loggedUID = loggedUID()
 
         return db.transaction {
-            FriendDao.selectListByUID(account.uid)
+            if (!AccountDao.existsUid(param.uid)) return@transaction Res.error(AccountStatus.AccountNotExists)
+
+            val record = FriendRequestDao.last(loggedUID, param.uid)
+            if (record != null && record.status == FriendRequestStatus.REQUEST && record.isValid()) {
+                return@transaction Res.error(msg = "请等待对方验证")
+            }
+            // TODO: 发送好友申请推送
+            FriendRequestDao.add(loggedUID, param.uid, param.msg.trim()).result()
+        }
+    }
+
+    override suspend fun getFriendList(): Res<List<AccountInfo>> {
+        val loggedUID = loggedUID()
+
+        return db.transaction {
+            FriendDao.selectListByUID(loggedUID)
         }.result()
     }
 
-    override suspend fun acceptFriendRequest(token: String, param: FriendAcceptParam): Res<Unit> = db.transaction {
-        val account = Jwt.parse(token).payload.account
-
-        val record =
-            FriendRequestDao.selectById(param.id) ?: return@transaction Res.error(CommonStatus.ParamErr, "请求不存在")
-
-        // 验证是否有操作权限
-        if (record.requestUID != account.uid) return@transaction Res.error(CommonStatus.Unauthorized)
-
-        // 验证是否已处理或者已过期
-        if (record.status != FriendRequestStatus.REQUEST || !record.isValid())
-            return@transaction Res.error(msg = "请求已过期，请邀请好友重新申请")
-
-        val result = FriendRequestDao.updateStatusById(FriendRequestStatus.ACCEPT, record.id)
-        if (result) {
-            if (!FriendDao.exists(record.createUID, record.requestUID))
-                FriendDao.add(record.createUID, record.requestUID)
-            if (!FriendDao.exists(record.requestUID, record.createUID))
-                FriendDao.add(record.requestUID, record.createUID)
-        }
-
-        result.result()
+    override suspend fun getFriendUIDList(uid: String): Res<List<Long>> {
+        return db.transaction {
+            FriendDao.selectUIDListByUID(uid.toLong())
+        }.result()
     }
 
-    override suspend fun rejectFriendRequest(token: String, param: FriendRejectParam): Res<Unit> = db.transaction {
-        val account = Jwt.parse(token).payload.account
-
-        val record =
-            FriendRequestDao.selectById(param.id) ?: return@transaction Res.error(CommonStatus.ParamErr, "请求不存在")
-
-        // 验证是否有操作权限
-        if (record.requestUID != account.uid) return@transaction Res.error(CommonStatus.Unauthorized)
-
-        // 验证是否已处理或者已过期
-        if (record.status != FriendRequestStatus.REQUEST || !record.isValid())
-            return@transaction Res.error(msg = "请求已过期")
-
-        val result = FriendRequestDao.updateStatusById(FriendRequestStatus.REJECT, record.id)
-
-        result.result()
-    }
-
-    override suspend fun getFriendRequestList(token: String, offset: String): Res<List<FriendRequestVO>> {
-        val account = Jwt.parse(token).payload.account
+    override suspend fun acceptFriendRequest(param: FriendAcceptParam): Res<Unit> {
+        val loggedUID = loggedUID()
 
         return db.transaction {
-            FriendRequestDao.selectList(account.uid, offset.toLongOrNull() ?: 0)
+            val record =
+                FriendRequestDao.selectById(param.id) ?: return@transaction Res.error(
+                    CommonStatus.ParamErr,
+                    "请求不存在"
+                )
+
+            // 验证是否有操作权限
+            assertTrue(record.requestUID == loggedUID, CommonStatus.Unauthorized)
+
+            // 验证是否已处理或者已过期
+            assertTrue(record.status == FriendRequestStatus.REQUEST && record.isValid()) { "请求已过期，请邀请好友重新申请" }
+
+            val result = FriendRequestDao.updateStatusById(FriendRequestStatus.ACCEPT, record.id)
+            if (result) {
+                if (!FriendDao.exists(record.createUID, record.requestUID))
+                    FriendDao.add(record.createUID, record.requestUID)
+                if (!FriendDao.exists(record.requestUID, record.createUID))
+                    FriendDao.add(record.requestUID, record.createUID)
+            }
+
+            result.result()
+        }
+    }
+
+    override suspend fun rejectFriendRequest(param: FriendRejectParam): Res<Unit> {
+        val loggedUID = loggedUID()
+
+        return db.transaction {
+            val record = assertNotNull(FriendRequestDao.selectById(param.id)) { "请求不存在" }
+
+            // 验证是否有操作权限
+            assertTrue(record.requestUID == loggedUID, CommonStatus.Unauthorized)
+
+            // 验证是否已处理或者已过期
+            assertTrue(record.status == FriendRequestStatus.REQUEST && record.isValid()) { "请求已过期" }
+
+            val result = FriendRequestDao.updateStatusById(FriendRequestStatus.REJECT, record.id)
+
+            assertTrue(result)
+
+            Res.success()
+        }
+    }
+
+    override suspend fun getFriendRequestList(offset: String): Res<List<FriendRequestVO>> {
+        val loggedUID = loggedUID()
+
+        return db.transaction {
+            FriendRequestDao.selectList(loggedUID, offset.toLongOrNull() ?: 0)
         }.result()
     }
 
@@ -158,7 +192,7 @@ class AccountServiceImpl(application: KtorCloudApplication) : AccountService {
         if (arr.size != 3) return null
         val result = tokenHmacUtils.hmacHex("${arr[0]}.${arr[1]}") == arr[2]
         if (!result) return null
-        return Jwt.parse(token).payload.account.uid
+        return Jwt.parse(token).payload.uid
     }
 
     @OptIn(ExperimentalEncodingApi::class)
@@ -168,7 +202,7 @@ class AccountServiceImpl(application: KtorCloudApplication) : AccountService {
             Json.encodeToString(
                 Jwt.Payload(
                     Clock.System.now().plus(30.days).toLocalDateTime(TimeZone.UTC),
-                    accountInfo,
+                    accountInfo.uid,
                 )
             ).toByteArray()
         )

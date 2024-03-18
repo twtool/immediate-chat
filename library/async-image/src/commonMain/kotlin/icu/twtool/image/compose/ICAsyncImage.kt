@@ -26,7 +26,6 @@ fun ICAsyncImage(
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.None,
 ) {
-
     val image: Painter? by produceState<Painter?>(null) {
         withContext(Dispatchers.IO) {
             value = data()?.let {
@@ -43,6 +42,20 @@ fun ICAsyncImage(
             Image(bitmap, contentDescription, modifier, contentScale = contentScale)
         }
     }
+}
+
+@Composable
+fun ICAsyncImage(
+    data: Painter?,
+    contentDescription: String?,
+    placeholder: Painter? = null,
+    modifier: Modifier = Modifier,
+    contentScale: ContentScale = ContentScale.None,
+) {
+    val image: Painter? = data ?: placeholder
+
+    if (image != null) Image(image, contentDescription, modifier, contentScale = contentScale)
+    else Box(modifier)
 }
 
 suspend fun HttpClient.urlByteArray(url: String): ByteArray? {

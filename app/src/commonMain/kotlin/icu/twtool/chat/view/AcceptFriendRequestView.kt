@@ -31,7 +31,6 @@ import icu.twtool.chat.components.TextDialog
 import icu.twtool.chat.server.account.AccountService
 import icu.twtool.chat.server.account.param.FriendAcceptParam
 import icu.twtool.chat.service.get
-import icu.twtool.chat.state.LoggedInState
 import icu.twtool.chat.theme.DisabledAlpha
 import icu.twtool.chat.theme.ElevationTokens
 import kotlinx.coroutines.launch
@@ -83,7 +82,7 @@ fun AcceptFriendRequestView(snackbarHostState: SnackbarHostState, paddingValues:
                 doRequest = true
                 scope.launch {
                     val res =
-                        AccountService.get().acceptFriendRequest(LoggedInState.token!!, FriendAcceptParam(info.id))
+                        AccountService.get().acceptFriendRequest(FriendAcceptParam(info.id))
 
                     if (res.success) onBack()
                     else snackbarHostState.showSnackbar(res.msg)

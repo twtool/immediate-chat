@@ -12,7 +12,9 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import icu.twtool.chat.app.AppBottomNavigationBar
 import icu.twtool.chat.app.AppNavHost
@@ -22,6 +24,9 @@ import icu.twtool.chat.app.DynamicRoute
 import icu.twtool.chat.app.FriendsRoute
 import icu.twtool.chat.app.LoginRoute
 import icu.twtool.chat.app.MessagesRoute
+import icu.twtool.chat.app.PublishDynamicRoute
+import icu.twtool.chat.components.file.FileRes
+import icu.twtool.chat.components.file.LookFile
 import icu.twtool.chat.material.ICScaffold
 import icu.twtool.chat.navigation.rememberNavController
 import icu.twtool.chat.navigation.window.ICWindowSizeClass
@@ -35,6 +40,8 @@ fun App(
 ) {
     val controller = rememberNavController(if (LoggedInState.token == null) LoginRoute else MessagesRoute)
 
+    var lookFile by remember { mutableStateOf<FileRes?>(null) }
+
     ICBackHandler(!controller.empty) {
         controller.pop()
     }
@@ -47,7 +54,13 @@ fun App(
             SnackbarHost(snackbarHostState)
         },
         topBar = {
-            AppTopBar(controller, windowSize)
+            AppTopBar(controller, windowSize,
+                onClickAdd = {
+                    when (controller.current) {
+                        DynamicRoute -> controller.navigateTo(PublishDynamicRoute)
+                    }
+                }
+            )
         },
         bottomBar = {
             val visible by derivedStateOf {
@@ -70,9 +83,18 @@ fun App(
                 visible = windowSize.widthSizeClass >= ICWindowWidthSizeClass.Expanded &&
                         controller.current != LoginRoute
             ) {
-                AppNavigationRail(controller.current) { controller.navigateTo(it) }
+                AppNavigationRail(
+                    snackbarHostState, controller.current, controller,
+                    navigateTo = { controller.navigateTo(it) },
+                    onLook = { lookFile = it }
+                )
             }
-            AppNavHost(controller, windowSize, snackbarHostState, paddingValues)
+            AppNavHost(
+                controller, windowSize, snackbarHostState, paddingValues,
+                onLook = { lookFile = it }
+            )
         }
     }
+
+    LookFile(lookFile, onDismiss = { lookFile = null })
 }

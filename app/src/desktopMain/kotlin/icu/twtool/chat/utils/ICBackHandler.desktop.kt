@@ -14,9 +14,9 @@ import androidx.compose.ui.input.key.type
 @Composable
 actual fun _BackHandler(enabled: Boolean, onBack: () -> Unit) {
     val store = LocalKeyEventStore.current
-    val handler = remember(onBack) {
+    val handler = remember(enabled, onBack) {
         { event: KeyEvent ->
-            if (event.key == Key.Escape && event.type == KeyEventType.KeyUp) {
+            if (event.key == Key.Escape && event.type == KeyEventType.KeyUp && enabled) {
                 onBack()
                 true
             } else false

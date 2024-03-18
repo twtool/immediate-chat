@@ -25,7 +25,7 @@ class NewFriendViewState {
             mutex.tryLockRun {
                 if (!more) return@tryLockRun
 
-                val res = accountService.getFriendRequestList(LoggedInState.token!!, friendRequestList.size.toString())
+                val res = accountService.getFriendRequestList(friendRequestList.size.toString())
                 if (res.success) {
                     val data = res.data ?: emptyList()
                     if (data.isEmpty()) {

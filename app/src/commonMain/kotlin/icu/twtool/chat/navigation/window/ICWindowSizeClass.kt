@@ -89,7 +89,7 @@ value class ICWindowWidthSizeClass private constructor(private val value: Int) :
 
 @Immutable
 @JvmInline
-value class ICWindowHeightSizeClass private constructor(private val value: Int) : Comparable<ICWindowHeightSizeClass> {
+value class ICWindowHeightSizeClass private constructor(val value: Int) : Comparable<ICWindowHeightSizeClass> {
 
     override fun compareTo(other: ICWindowHeightSizeClass): Int =
         breakpoint().compareTo(other.breakpoint())

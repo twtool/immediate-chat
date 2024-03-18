@@ -1,0 +1,3 @@
+###
+GET {{host}}/cos/tmp-credential
+Authorization: Bearer {{TOKEN100000}}

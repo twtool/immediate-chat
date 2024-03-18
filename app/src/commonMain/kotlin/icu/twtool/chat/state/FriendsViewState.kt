@@ -38,7 +38,7 @@ class FriendsViewState {
                     }
                 val flag = refresh || dbData.isEmpty()
                 friendList = if (flag) {
-                    val res = accountService.getFriendList(LoggedInState.token!!)
+                    val res = accountService.getFriendList()
                     val remoteData = res.data ?: emptyList()
                     if (res.success) {
                         val addData = mutableListOf<AccountInfo>()

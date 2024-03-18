@@ -16,6 +16,8 @@ dependencies {
     implementation(projects.server.account.accountInterface)
     implementation(projects.server.gateway.gatewayInterface)
     implementation(projects.server.chat.chatInterface)
+    implementation(projects.server.dynamic.dynamicInterface)
+    implementation(projects.server.cos.cosInterface)
 
     implementation(libs.ktor.cloud.application)
     implementation(libs.ktor.cloud.discovery.polaris)

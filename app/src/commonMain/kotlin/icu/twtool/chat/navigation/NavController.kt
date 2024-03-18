@@ -22,7 +22,10 @@ class NavController(initial: NavRoute) {
     fun navigateTo(route: NavRoute, customStack: List<NavRoute>? = null) {
         if (current == route) return
         if (customStack != null) {
-            stack.clear()
+            stack.removeAll {
+                it.onPop()
+                true
+            }
             stack.addAll(customStack)
         } else if (!route.top) stack.add(current)
         else stack.clear()

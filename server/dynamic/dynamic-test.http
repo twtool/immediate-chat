@@ -1,0 +1,25 @@
+### 获取时间线
+POST {{host}}/dynamic/timelines
+Content-Type: application/json
+Authorization: Bearer {{TOKEN100001}}
+
+{
+  "friendUID": null,
+  "currentPage": 1
+}
+
+### 发布
+POST {{host}}/dynamic/publish
+Content-Type: application/json
+Authorization: Bearer {{TOKEN100000}}
+
+{
+  "content": "Midjourney",
+  "attachments": [
+    "http://192.168.31.100/1710575521.webp",
+    "http://192.168.31.100/1710575548.webp",
+    "http://192.168.31.100/1710575555.webp",
+    "http://192.168.31.100/1710575566.webp",
+    "http://192.168.31.100/1710575574.webp"
+  ]
+}

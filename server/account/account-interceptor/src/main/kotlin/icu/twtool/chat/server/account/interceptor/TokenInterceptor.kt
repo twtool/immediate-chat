@@ -14,22 +14,19 @@ import kotlin.coroutines.AbstractCoroutineContextElement
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.coroutineContext
 
-class LoggedInAccountInfoElement(val value: AccountInfo) :
-    AbstractCoroutineContextElement(LoggedInAccountInfoElement) {
-    companion object Key : CoroutineContext.Key<LoggedInAccountInfoElement>
+class LoggedUIDElement(val value: Long) :
+    AbstractCoroutineContextElement(LoggedUIDElement) {
+    companion object Key : CoroutineContext.Key<LoggedUIDElement>
 }
 
-suspend fun loggedAccountInfo(): AccountInfo =
-    coroutineContext[LoggedInAccountInfoElement]?.value ?: throw BizException(CommonStatus.NotLogged)
-
-suspend fun loggedUID(): Long = loggedAccountInfo().uid
+suspend fun loggedUID(): Long =  coroutineContext[LoggedUIDElement]?.value ?: throw BizException(CommonStatus.NotLogged)
 
 fun KtorCloudApplication.installTokenInterceptor() {
     application.intercept(ApplicationCallPipeline.Plugins) {
         val authorization = call.request.header(HttpHeaders.Authorization) ?: return@intercept proceed()
         authorization.let {
-            val info = Jwt.parse(it.replaceFirst("Bearer ", "")).payload.account
-            withContext(coroutineContext + LoggedInAccountInfoElement(info)) {
+            val info = Jwt.parse(it.replaceFirst("Bearer ", "")).payload.uid
+            withContext(coroutineContext + LoggedUIDElement(info)) {
                 proceed()
             }
         }

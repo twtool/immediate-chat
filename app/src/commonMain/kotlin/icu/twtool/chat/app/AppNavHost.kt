@@ -14,12 +14,15 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import icu.twtool.chat.app.nav.dynamicComposition
+import icu.twtool.chat.components.file.FileRes
 import icu.twtool.chat.navigation.NavController
 import icu.twtool.chat.navigation.NavHost
 import icu.twtool.chat.navigation.window.ICWindowSizeClass
 import icu.twtool.chat.navigation.window.ICWindowWidthSizeClass
 import icu.twtool.chat.view.AcceptFriendRequestView
 import icu.twtool.chat.view.AccountInfoView
+import icu.twtool.chat.view.ChangeAccountInfoView
 import icu.twtool.chat.view.ChatSettingsView
 import icu.twtool.chat.view.ChatView
 import icu.twtool.chat.view.DynamicView
@@ -34,6 +37,7 @@ fun AppNavHost(
     windowSize: ICWindowSizeClass,
     snackbarHostState: SnackbarHostState,
     paddingValues: PaddingValues,
+    onLook: (FileRes) -> Unit
 ) {
     NavHost(controller, windowSize, paddingValues) {
         composable(LoginRoute) { _, paddingValues ->
@@ -59,15 +63,22 @@ fun AppNavHost(
                         onBack = { controller.pop() },
                         navigateToChatSettingsRoute = {
                             // TODO
-                        })
+                        },
+                        navigateChatRoute = { controller.navigateTo(ChatRoute, listOf(MessagesRoute)) },
+                        navigateAccountInfoRoute = { controller.navigateTo(AccountInfoRoute, listOf(FriendsRoute)) }
+                    )
                 }
             )
         }
         composable(ChatRoute) { state, paddingValues ->
-            ChatView(state.windowSize.widthSizeClass, paddingValues, onBack = { controller.pop() },
+            ChatView(
+                state.windowSize.widthSizeClass, paddingValues, onBack = { controller.pop() },
                 navigateToChatSettingsRoute = {
                     // TODO
-                })
+                },
+                navigateChatRoute = { controller.navigateTo(ChatRoute) },
+                navigateAccountInfoRoute = { controller.navigateTo(AccountInfoRoute) }
+            )
         }
         composable(ChatRoute, ICWindowWidthSizeClass.Expanded) { state, paddingValues ->
             TwoPanel(
@@ -82,7 +93,10 @@ fun AppNavHost(
                         state.windowSize.widthSizeClass,
                         paddingValues,
                         onBack = { controller.pop() },
-                        navigateToChatSettingsRoute = {})
+                        navigateToChatSettingsRoute = {},
+                        navigateChatRoute = { controller.navigateTo(ChatRoute, listOf(MessagesRoute)) },
+                        navigateAccountInfoRoute = { controller.navigateTo(AccountInfoRoute, listOf(FriendsRoute)) }
+                    )
                 }
             )
         }
@@ -104,9 +118,7 @@ fun AppNavHost(
                 }
             )
         }
-        composable(DynamicRoute) { _, _ ->
-            DynamicView()
-        }
+        dynamicComposition(controller, onLook = onLook)
         composable(NewFriendRoute) { _, paddingValues ->
             NewFriendView(snackbarHostState, paddingValues, controller::navigateTo)
         }
@@ -140,7 +152,8 @@ fun AppNavHost(
         composable(AccountInfoRoute) { _, _ ->
             AccountInfoView(
                 onBack = { controller.pop() },
-                navigateToChatRoute = { controller.navigateTo(ChatRoute) }
+                navigateToChatRoute = { controller.navigateTo(ChatRoute) },
+                navigateToChangeAccountInfo = { controller.navigateTo(ChangeAccountInfoRoute) }
             )
         }
         composable(AccountInfoRoute, ICWindowWidthSizeClass.Expanded) { _, paddingValues ->
@@ -153,10 +166,14 @@ fun AppNavHost(
                 {
                     AccountInfoView(
                         onBack = { controller.pop() },
-                        navigateToChatRoute = { controller.navigateTo(ChatRoute, listOf(MessagesRoute)) }
+                        navigateToChatRoute = { controller.navigateTo(ChatRoute, listOf(MessagesRoute)) },
+                        navigateToChangeAccountInfo = { controller.navigateTo(ChangeAccountInfoRoute) }
                     )
                 }
             )
+        }
+        composable(ChangeAccountInfoRoute) { _, paddingValues ->
+            ChangeAccountInfoView(paddingValues) { controller.pop() }
         }
     }
 }

@@ -12,4 +12,8 @@ object Accounts : LongIdTable("tb_account") {
 
     val createAt = datetime("create_at")
     val updateAt = datetime("update_at")
+
+    fun verifyNickname(nickname: String?): Boolean {
+        return (nickname?.length ?: 0) <= 16
+    }
 }

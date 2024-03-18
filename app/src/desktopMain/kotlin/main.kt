@@ -32,30 +32,37 @@ import androidx.compose.ui.window.rememberWindowState
 import icu.twtool.cache.DesktopCache
 import icu.twtool.chat.App
 import icu.twtool.chat.WebSocketService
+import icu.twtool.chat.composition.LocalComposeWindow
 import icu.twtool.chat.constants.ApplicationDir
+import icu.twtool.chat.constants.COS_CONFIG
+import icu.twtool.chat.navigation.window.LocalWindowState
 import icu.twtool.chat.navigation.window.calculateWindowSizeClass
 import icu.twtool.chat.navigation.window.systemBarHeight
 import icu.twtool.chat.theme.ICTheme
 import icu.twtool.chat.utils.KeyEventStore
 import icu.twtool.chat.utils.LocalKeyEventStore
 import icu.twtool.chat.utils.loadLibrary
+import icu.twtool.cos.DesktopCosClient
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
+    loadLibrary("mmkv")
+    DesktopCache.initialize("$ApplicationDir\\mmkv")
+    DesktopCosClient.initialize(COS_CONFIG)
+
     val service = WebSocketService()
     service.start()
     awaitApplication {
         systemBarHeight = 24.dp
-        loadLibrary("mmkv")
-        DesktopCache.initialize("$ApplicationDir\\mmkv")
 
         val windowState = rememberWindowState(
             position = WindowPosition.Aligned(Alignment.Center),
-//            width = 840.dp,
-            width = 480.dp,
+            width = 840.dp,
+//            width = 480.dp,
+            height = 800.dp
         )
 
-        CompositionLocalProvider(LocalKeyEventStore provides KeyEventStore()) {
+        CompositionLocalProvider(LocalKeyEventStore provides KeyEventStore(), LocalWindowState provides windowState) {
             val store = LocalKeyEventStore.current
             Window(
                 ::exitApplication,
@@ -75,40 +82,42 @@ fun main() = runBlocking {
 
                 var showExitDialog by remember { mutableStateOf(false) }
 
-                if (showExitDialog) {
-                    AlertDialog(
-                        onDismissRequest = { showExitDialog = false },
-                        title = { Text("确认退出？") },
-                        confirmButton = {
-                            TextButton({ exitApplication() }) {
-                                Text("确认")
-                            }
+                CompositionLocalProvider(LocalComposeWindow provides window) {
+                    ICTheme {
+                        if (showExitDialog) {
+                            AlertDialog(
+                                onDismissRequest = { showExitDialog = false },
+                                title = { Text("确认退出？") },
+                                confirmButton = {
+                                    TextButton({ exitApplication() }) {
+                                        Text("确认")
+                                    }
+                                }
+                            )
                         }
-                    )
-                }
 
-                ICTheme {
-                    Surface(Modifier.fillMaxSize(), shape = MaterialTheme.shapes.small) {
-                        Box {
-                            App(windowSize)
-                            WindowDraggableArea(Modifier.height(systemBarHeight).fillMaxWidth()) {
-                                Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
-                                    Spacer(Modifier.weight(1f, true))
-                                    Icon(
-                                        Icons.Filled.Close,
-                                        "",
-                                        Modifier.clickable {
-                                            showExitDialog = true
-                                        }.padding(4.dp).size(16.dp)
-                                    )
+                        Surface(Modifier.fillMaxSize(), shape = MaterialTheme.shapes.small) {
+                            Box {
+                                App(windowSize)
+                                WindowDraggableArea(Modifier.height(systemBarHeight).fillMaxWidth()) {
+                                    Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
+                                        Spacer(Modifier.weight(1f, true))
+                                        Icon(
+                                            Icons.Filled.Close,
+                                            "",
+                                            Modifier.clickable {
+                                                showExitDialog = true
+                                            }.padding(4.dp).size(16.dp)
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
                 }
-
             }
         }
     }
     service.destroy()
+    DesktopCosClient.close()
 }

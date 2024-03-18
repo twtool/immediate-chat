@@ -21,7 +21,6 @@ import io.ktor.websocket.closeExceptionally
 import io.ktor.websocket.readText
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.JsonNull.content
 import kotlinx.serialization.json.jsonPrimitive
 import org.apache.rocketmq.client.apis.consumer.ConsumeResult
 import org.slf4j.LoggerFactory

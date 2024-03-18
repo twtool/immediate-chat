@@ -1,5 +1,6 @@
 package icu.twtool.chat
 
+import icu.twtool.chat.server.account.interceptor.installTokenInterceptor
 import icu.twtool.chat.server.common.BizException
 import icu.twtool.chat.server.common.Res
 import icu.twtool.chat.tables.Accounts
@@ -25,6 +26,7 @@ fun main() {
         }
     ) {
         install(PolarisRegistry())
+        installTokenInterceptor()
 
         initExposed {
             SchemaUtils.createMissingTablesAndColumns(

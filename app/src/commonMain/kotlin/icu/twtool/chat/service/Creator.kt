@@ -6,6 +6,10 @@ import icu.twtool.chat.server.chat.ChatService
 import icu.twtool.chat.server.chat.create
 import icu.twtool.chat.server.common.CommonStatus
 import icu.twtool.chat.server.common.Res
+import icu.twtool.chat.server.cos.CosService
+import icu.twtool.chat.server.cos.create
+import icu.twtool.chat.server.dynamic.DynamicService
+import icu.twtool.chat.server.dynamic.create
 import icu.twtool.chat.state.LoggedInState
 import icu.twtool.ktor.cloud.client.kmp.ServiceCreator
 import icu.twtool.ktor.cloud.client.kmp.websocket.websocket
@@ -20,7 +24,7 @@ expect fun websocketProtocol(): URLProtocol
 expect fun host(): String
 expect fun port(): Int
 
-val log = getLogger("icu.twtool.chat.service.CreatorKt")
+private val log = getLogger("icu.twtool.chat.service.CreatorKt")
 
 val creator = ServiceCreator(
     protocol(), websocketProtocol(), host(), port(),
@@ -40,3 +44,5 @@ val creator = ServiceCreator(
 
 fun AccountService.Companion.get() = creator.get(AccountService::create)
 fun ChatService.Companion.get() = creator.get(ChatService::create)
+fun DynamicService.Companion.get() = creator.get(DynamicService::create)
+fun CosService.Companion.get() = creator.get(CosService::create)

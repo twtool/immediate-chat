@@ -1,0 +1,19 @@
+server:
+  port: 20300
+service:
+  name: DynamicService
+polaris:
+  addresses:
+    - polaris.address:8091
+  namespace: immediate-chat
+exposed:
+  url: jdbc:mysql://mysql.address:3306/ic-dynamic
+  driver: com.mysql.cj.jdbc.Driver
+  user: root
+  password: root
+redis:
+  host: redis.address
+rocketmq:
+  endpoint: rocketmq.address:8081
+  consumer:
+    group: DynamicService

@@ -1,6 +1,7 @@
 package icu.twtool.chat.dao
 
 import icu.twtool.chat.server.account.model.Account
+import icu.twtool.chat.server.account.vo.AccountInfo
 import icu.twtool.chat.server.common.datetime.nowUTC
 import icu.twtool.chat.tables.Accounts
 import kotlinx.datetime.LocalDateTime
@@ -8,6 +9,7 @@ import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.update
 
 object AccountDao {
 
@@ -47,4 +49,11 @@ object AccountDao {
             .map { it[Accounts.avatarUrl] }
             .firstOrNull()
 
+    fun updateInfoByUID(info: AccountInfo) =
+        Accounts.update({
+            Accounts.uid eq info.uid
+        }) {
+            it[nickname] = info.nickname
+            it[avatarUrl] = info.avatarUrl
+        } == 1
 }
