@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import icu.twtool.chat.app.nav.dynamicComposition
+import icu.twtool.chat.app.nav.friendComposition
 import icu.twtool.chat.components.file.FileRes
 import icu.twtool.chat.navigation.NavController
 import icu.twtool.chat.navigation.NavHost
@@ -28,7 +29,7 @@ import icu.twtool.chat.view.ChatView
 import icu.twtool.chat.view.FriendsView
 import icu.twtool.chat.view.LoginView
 import icu.twtool.chat.view.MessagesView
-import icu.twtool.chat.view.NewFriendView
+import icu.twtool.chat.view.ScanCodeView
 
 @Composable
 fun AppNavHost(
@@ -102,39 +103,8 @@ fun AppNavHost(
         composable(ChatSettingsRoute) { _, paddingValues ->
             ChatSettingsView(Modifier.padding(paddingValues))
         }
-        composable(FriendsRoute) { state, paddingValues ->
-            FriendsView(snackbarHostState, state.windowSize, paddingValues, controller::navigateTo)
-        }
-        composable(FriendsRoute, ICWindowWidthSizeClass.Expanded) { state, paddingValues ->
-            TwoPanel(
-                {
-                    FriendsView(snackbarHostState, state.windowSize, paddingValues) {
-                        controller.navigateTo(it, listOf(FriendsRoute))
-                    }
-                },
-                {
-
-                }
-            )
-        }
         dynamicComposition(snackbarHostState, controller, onLook = onLook)
-        composable(NewFriendRoute) { _, paddingValues ->
-            NewFriendView(snackbarHostState, paddingValues, controller::navigateTo)
-        }
-        composable(NewFriendRoute, ICWindowWidthSizeClass.Expanded) { state, paddingValues ->
-            TwoPanel(
-                {
-                    FriendsView(snackbarHostState, state.windowSize, paddingValues) {
-                        controller.navigateTo(it, listOf(FriendsRoute))
-                    }
-                },
-                {
-                    NewFriendView(snackbarHostState, paddingValues) {
-                        controller.navigateTo(it, listOf(FriendsRoute, NewFriendRoute))
-                    }
-                }
-            )
-        }
+        friendComposition(snackbarHostState, controller, onLook = onLook)
         composable(AcceptFriendRequestRoute) { _, paddingValues ->
             AcceptFriendRequestView(snackbarHostState, paddingValues, onBack = { controller.pop() })
         }
@@ -173,6 +143,9 @@ fun AppNavHost(
         }
         composable(ChangeAccountInfoRoute) { _, paddingValues ->
             ChangeAccountInfoView(paddingValues) { controller.pop() }
+        }
+        composable(ScanCodeRoute) { _, _ ->
+            ScanCodeView(navigateToAccountInfoRoute = { controller.navigateTo(AccountInfoRoute) })
         }
     }
 }

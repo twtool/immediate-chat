@@ -23,7 +23,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
@@ -35,12 +39,18 @@ import icu.twtool.chat.app.ChatRoute
 import icu.twtool.chat.cache.produceAccountInfoState
 import icu.twtool.chat.components.Avatar
 import icu.twtool.chat.components.BackTopAppBar
+import icu.twtool.chat.components.LoadingDialogState
 import icu.twtool.chat.navigation.window.systemBarWindowInsets
+import icu.twtool.chat.server.account.AccountService
+import icu.twtool.chat.server.account.param.CheckFriendParam
+import icu.twtool.chat.server.account.param.FriendRequestParam
+import icu.twtool.chat.service.get
 import icu.twtool.chat.state.LoggedInState
 import icu.twtool.chat.theme.DisabledAlpha
 import icu.twtool.chat.theme.ElevationTokens
 import immediatechat.app.generated.resources.Res
 import immediatechat.app.generated.resources.ic_dynamic
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
@@ -70,6 +80,10 @@ fun AccountInfoView(onBack: () -> Unit, navigateToChatRoute: () -> Unit, navigat
     val info = AccountInfoRoute.info ?: return
     val newInfo by produceAccountInfoState(info)
     val me = info.uid == LoggedInState.info?.uid
+
+    val friend = produceState(false) {
+        value = AccountService.get().checkFriend(CheckFriendParam(info.uid)).data ?: false
+    }
 
     val windowInsets = systemBarWindowInsets
     val scope = rememberCoroutineScope()
@@ -102,17 +116,32 @@ fun AccountInfoView(onBack: () -> Unit, navigateToChatRoute: () -> Unit, navigat
             )
         }
 
+        var sendRequestState by remember { mutableStateOf<LoadingDialogState?>(null) }
+
         Row(Modifier.fillMaxWidth().padding(16.dp)) {
             Button({
                 scope.launch {
                     if (me) {
                         navigateToChangeAccountInfo()
-                    } else ChatRoute.open(newInfo) {
+                    } else if (friend.value) ChatRoute.open(newInfo) {
                         navigateToChatRoute()
+                    } else {
+                        if (sendRequestState != null) return@launch
+                        sendRequestState = LoadingDialogState("请求中...")
+                        // TODO:允许编辑
+                        val res = AccountService.get().sendFriendRequest(
+                            FriendRequestParam(info.uid, "对方请求添加好友")
+                        )
+
+                        sendRequestState = if (res.success) LoadingDialogState("已发送", success = true)
+                        else LoadingDialogState(res.msg, error = true)
+
+                        delay(500)
+                        sendRequestState = null
                     }
                 }
             }, Modifier.weight(1f)) {
-                Text(if (me) "编辑资料" else "发起聊天")
+                Text(if (me) "编辑资料" else if (friend.value) "发起聊天" else "添加好友")
             }
         }
         Spacer(Modifier.requiredHeight(with(LocalDensity.current) { windowInsets.getBottom(this).toDp() }))

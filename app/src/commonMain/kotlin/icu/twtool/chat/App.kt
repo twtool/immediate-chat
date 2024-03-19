@@ -16,6 +16,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import icu.twtool.chat.app.AddFriendRoute
 import icu.twtool.chat.app.AppBottomNavigationBar
 import icu.twtool.chat.app.AppNavHost
 import icu.twtool.chat.app.AppNavigationRail
@@ -58,6 +59,7 @@ fun App(
                 onClickAdd = {
                     when (controller.current) {
                         DynamicRoute -> controller.navigateTo(PublishDynamicRoute)
+                        FriendsRoute -> controller.navigateTo(AddFriendRoute)
                     }
                 }
             )

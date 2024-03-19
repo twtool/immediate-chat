@@ -48,6 +48,7 @@ val ChatSettingsRoute = NavRoute("ChatSettings", false, title = "聊天设置")
 
 val FriendsRoute = NavRoute("Friends", true)
 val NewFriendRoute = NavRoute("NewFriend", false, FriendsRoute)
+val AddFriendRoute = NavRoute("AddFriend", false, FriendsRoute)
 
 @Stable
 object AcceptFriendRequestRoute : NavRoute("AcceptFriendRequest", false, FriendsRoute) {
@@ -63,6 +64,13 @@ val PublishDynamicRoute = NavRoute("Dynamic", false, DynamicRoute)
 @Stable
 object AccountInfoRoute : NavRoute("AccountInfo", false, FriendsRoute) {
     var info: AccountInfo? by mutableStateOf(null)
+
+    fun open(info: AccountInfo, opened: () -> Unit) {
+        this.info = info
+        opened()
+    }
 }
 
 val ChangeAccountInfoRoute = NavRoute("ChangeAccountInfo", false, title = "编辑资料")
+
+val ScanCodeRoute = NavRoute("ScanCode", false)

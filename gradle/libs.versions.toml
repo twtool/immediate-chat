@@ -10,6 +10,7 @@ androidx-appcompat = "1.6.1"
 androidx-window = "1.2.0"
 
 accompanist = "0.34.0"
+camerax = "1.3.2"
 compose = "1.6.1"
 compose-compiler = "1.5.10"
 compose-plugin = "1.6.1" # https://github.com/JetBrains/compose-multiplatform/releases
@@ -23,6 +24,7 @@ ksp = "1.9.23-1.0.19"
 ktor = "2.3.8"
 ktor-cloud = "1.0.0-SNAPSHOT"
 logback = "1.4.14"
+mlkit-barcode-scaning = "17.2.0"
 mmkv = "1.3.3"
 mmkv-jvm = "1.0-SNAPSHOT"
 mysql = "8.3.0"
@@ -34,6 +36,7 @@ slf4j-api = "2.0.11"
 snakeyaml = "2.2"
 sqldelight = "2.0.1"
 startup-runtime = "1.1.1"
+zxing = "3.5.3"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity-compose" }
@@ -41,6 +44,9 @@ androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "a
 androidx-window = { module = "androidx.window:window", version.ref = "androidx-window" }
 
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanist" }
+
+camera-camera2 = { group = "androidx.camera", name = "camera-camera2", version.ref = "camerax" }
+camera-view = { group = "androidx.camera", name = "camera-view", version.ref = "camerax" }
 
 exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
 exposed-dao = { module = "org.jetbrains.exposed:exposed-dao", version.ref = "exposed" }
@@ -75,6 +81,9 @@ ktor-cloud-route-gateway = { module = "icu.twtool.ktor.cloud:route-gateway", ver
 ktor-cloud-route-websocket = { module = "icu.twtool.ktor.cloud:route-websocket", version.ref = "ktor-cloud" }
 
 logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+
+mlkit-barcode-scanning = { group = "com.google.mlkit", name = "barcode-scanning", version.ref = "mlkit-barcode-scaning" }
+
 mmkv = { module = "com.tencent:mmkv", version.ref = "mmkv" }
 mmkv-jvm = { module = "icu.twtool:mmkv-jvm", version.ref = "mmkv-jvm" }
 mysql = { module = "com.mysql:mysql-connector-j", version.ref = "mysql" }
@@ -92,6 +101,9 @@ sqldelight-driver-native = { module = "app.cash.sqldelight:native-driver", versi
 sqldelight-driver-sqlite = { module = "app.cash.sqldelight:sqlite-driver", version.ref = "sqldelight" }
 
 startup-runtime = { module = "androidx.startup:startup-runtime", version.ref = "startup-runtime" }
+
+zxing-core = { group = "com.google.zxing", name = "core", version.ref = "zxing" }
+zxing-javase = { group = "com.google.zxing", name = "javase", version.ref = "zxing" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

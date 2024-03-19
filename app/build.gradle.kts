@@ -37,6 +37,10 @@ kotlin {
             implementation(libs.sqldelight.driver.android)
 
             implementation(libs.accompanist.permissions)
+            implementation(libs.zxing.core)
+            implementation(libs.camera.camera2)
+            implementation(libs.camera.view)
+            implementation(libs.mlkit.barcode.scanning)
         }
 
         commonMain.dependencies {
@@ -66,6 +70,7 @@ kotlin {
             implementation(compose.desktop.currentOs)
             implementation(libs.logback)
             implementation(libs.sqldelight.driver.sqlite)
+            implementation(libs.zxing.javase)
         }
     }
 }

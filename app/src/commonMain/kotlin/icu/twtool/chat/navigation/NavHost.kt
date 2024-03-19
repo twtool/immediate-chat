@@ -39,6 +39,16 @@ class NavHostBuilder {
         if (windowWidthSize == null) navMap[route] = content
         else windowWidthSizeNavMap[windowWidthSize]?.put(route, content)
     }
+
+    fun composable(
+        routes: List<NavRoute>,
+        windowWidthSize: ICWindowWidthSizeClass,
+        content: @Composable (NavHostState, PaddingValues) -> Unit
+    ) {
+        routes.forEach { route ->
+            windowWidthSizeNavMap[windowWidthSize]?.put(route, content)
+        }
+    }
 }
 
 @Immutable

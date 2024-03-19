@@ -1,6 +1,7 @@
 package icu.twtool.chat.server.account
 
 import icu.twtool.chat.server.account.param.AuthParam
+import icu.twtool.chat.server.account.param.CheckFriendParam
 import icu.twtool.chat.server.account.param.FriendAcceptParam
 import icu.twtool.chat.server.account.param.FriendRejectParam
 import icu.twtool.chat.server.account.param.FriendRequestParam
@@ -35,6 +36,12 @@ interface AccountService {
 
     @RequestMapping(HttpMethod.Post, "update-info")
     suspend fun updateInfo(@Body param: UpdateInfoParam): Res<AccountInfo>
+
+    /**
+     * 判断是否是好友
+     */
+    @RequestMapping(HttpMethod.Post, "check-friend")
+    suspend fun checkFriend(@Body param: CheckFriendParam): Res<Boolean>
 
     /**
      * 发起好友申请

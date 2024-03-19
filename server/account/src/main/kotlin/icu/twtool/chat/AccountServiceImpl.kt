@@ -8,6 +8,7 @@ import icu.twtool.chat.server.account.interceptor.loggedUID
 import icu.twtool.chat.server.account.jwt.Jwt
 import icu.twtool.chat.server.account.model.FriendRequestStatus
 import icu.twtool.chat.server.account.param.AuthParam
+import icu.twtool.chat.server.account.param.CheckFriendParam
 import icu.twtool.chat.server.account.param.FriendAcceptParam
 import icu.twtool.chat.server.account.param.FriendRejectParam
 import icu.twtool.chat.server.account.param.FriendRequestParam
@@ -74,6 +75,13 @@ class AccountServiceImpl(application: KtorCloudApplication) : AccountService {
 
         if (result) Res.success(generateToken(AccountInfo(uid, null, null)))
         else Res.error(msg = "注册失败，请联系开发人员")
+    }
+
+    override suspend fun checkFriend(param: CheckFriendParam): Res<Boolean> {
+        val loggedUID = loggedUID()
+        return Res.success(db.transaction {
+            FriendDao.exists(loggedUID, param.uid)
+        })
     }
 
     override suspend fun updateInfo(param: UpdateInfoParam): Res<AccountInfo> {

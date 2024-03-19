@@ -28,7 +28,12 @@ class NavController(initial: NavRoute) {
             }
             stack.addAll(customStack)
         } else if (!route.top) stack.add(current)
-        else stack.clear()
+        else {
+            stack.removeAll {
+                it.onPop()
+                true
+            }
+        }
         current = route
 
         empty = stack.isEmpty()
