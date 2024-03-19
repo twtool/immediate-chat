@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
@@ -28,6 +27,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.surfaceColorAtElevation
@@ -49,8 +49,11 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
+import androidx.compose.ui.window.DialogProperties
 import icu.twtool.chat.animate.toDpSize
 import icu.twtool.chat.cache.produceImageState
+import icu.twtool.chat.components.LoadingDialog
+import icu.twtool.chat.components.LoadingDialogState
 import icu.twtool.chat.components.file.FilePosition
 import icu.twtool.chat.components.file.FileRes
 import icu.twtool.chat.components.file.ImageRes
@@ -68,6 +71,7 @@ import icu.twtool.image.compose.ICAsyncImage
 import immediatechat.app.generated.resources.Res
 import immediatechat.app.generated.resources.ic_back
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.painterResource
@@ -158,28 +162,53 @@ fun AttachmentsChooser(
 }
 
 @Composable
-fun PublishDynamicView(paddingValues: PaddingValues, onBack: () -> Unit, onLook: (FileRes) -> Unit) {
+fun PublishDynamicView(
+    snackbarHostState: SnackbarHostState,
+    paddingValues: PaddingValues, onBack: () -> Unit, onLook: (FileRes) -> Unit
+) {
     var content: String by remember { mutableStateOf("") }
     val attachments = remember { mutableStateListOf<ICFile>() }
     val inputInteractionSource = remember { MutableInteractionSource() }
     val scope = rememberCoroutineScope()
 
+    var publishState by remember { mutableStateOf<LoadingDialogState?>(null) }
+
+    publishState?.let {
+        LoadingDialog(it, properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false))
+    }
+
     val focused by inputInteractionSource.collectIsFocusedAsState()
     Column(Modifier.padding(paddingValues).fillMaxWidth()) {
         PublishDynamicTopAppBar(onBack = onBack, onPublish = {
+            val realContent = content.trim()
+            if (realContent.length !in 0..1024) {
+                scope.launch {
+                    snackbarHostState.showSnackbar("内容最长为 1024 个字符")
+                }
+                return@PublishDynamicTopAppBar
+            }
+            if (publishState != null) return@PublishDynamicTopAppBar
+            publishState = LoadingDialogState("准备中...")
             scope.launch {
                 withContext(Dispatchers.IO) {
                     val client = getCosClient()
-                    val attachmentUrls = attachments.map {
+                    val attachmentUrls = attachments.mapIndexed { index, it ->
+                        publishState = LoadingDialogState("上传图片（${index}/${attachments.size}）")
                         val key = "res/${LoggedInState.info?.uid}/${it.hashKey}"
                         client.putObject(key, it.inputStream(), CommonObjectMetadata(it.size))
                         key
                     }
-                    val res = DynamicService.get().publish(PublishDynamicParam(content, attachmentUrls))
-                    if (res.success) {
+                    publishState = LoadingDialogState("正在发布...")
+                    val res = DynamicService.get().publish(
+                        PublishDynamicParam(realContent, attachmentUrls)
+                    )
+                    publishState = if (res.success) {
                         content = ""
                         attachments.clear()
-                    }
+                        LoadingDialogState("已发布", success = true)
+                    } else LoadingDialogState(res.msg, error = true)
+                    delay(500)
+                    publishState = null
                 }
             }
         })

@@ -25,7 +25,6 @@ import icu.twtool.chat.view.AccountInfoView
 import icu.twtool.chat.view.ChangeAccountInfoView
 import icu.twtool.chat.view.ChatSettingsView
 import icu.twtool.chat.view.ChatView
-import icu.twtool.chat.view.DynamicView
 import icu.twtool.chat.view.FriendsView
 import icu.twtool.chat.view.LoginView
 import icu.twtool.chat.view.MessagesView
@@ -118,7 +117,7 @@ fun AppNavHost(
                 }
             )
         }
-        dynamicComposition(controller, onLook = onLook)
+        dynamicComposition(snackbarHostState, controller, onLook = onLook)
         composable(NewFriendRoute) { _, paddingValues ->
             NewFriendView(snackbarHostState, paddingValues, controller::navigateTo)
         }

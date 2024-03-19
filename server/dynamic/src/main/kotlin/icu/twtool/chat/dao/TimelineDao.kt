@@ -9,12 +9,9 @@ import icu.twtool.chat.tables.Dynamics
 import icu.twtool.chat.tables.Timelines
 import org.jetbrains.exposed.sql.JoinType
 import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.alias
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.batchInsert
-import org.jetbrains.exposed.sql.innerJoin
-import org.jetbrains.exposed.sql.joinQuery
 
 object TimelineDao {
 
@@ -65,7 +62,7 @@ object TimelineDao {
                     )
                     detail to attachments
                 }
-                pair.second.add(row[DynamicAttachments.url])
+                row.getOrNull(DynamicAttachments.url)?.let(pair.second::add)
                 acc
             }.values.map { it.first },
             param.currentPage,

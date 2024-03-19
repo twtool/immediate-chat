@@ -6,6 +6,7 @@ import icu.twtool.chat.dao.TimelineDao
 import icu.twtool.chat.server.account.AccountService
 import icu.twtool.chat.server.account.interceptor.loggedUID
 import icu.twtool.chat.server.common.Res
+import icu.twtool.chat.server.common.checkParam
 import icu.twtool.chat.server.common.datetime.nowUTC
 import icu.twtool.chat.server.common.page.PageVO
 import icu.twtool.chat.server.common.result
@@ -17,6 +18,7 @@ import icu.twtool.chat.server.dynamic.model.Timeline
 import icu.twtool.chat.server.dynamic.param.GetTimelinePageParam
 import icu.twtool.chat.server.dynamic.param.PublishDynamicParam
 import icu.twtool.chat.server.dynamic.vo.DynamicDetailsVO
+import icu.twtool.chat.tables.Dynamics
 import icu.twtool.ktor.cloud.JSON
 import icu.twtool.ktor.cloud.KtorCloudApplication
 import icu.twtool.ktor.cloud.client.service.getService
@@ -101,6 +103,7 @@ class DynamicServiceImpl(
 
     override suspend fun publish(param: PublishDynamicParam): Res<Unit> {
         val loggedUID = loggedUID()
+        checkParam(Dynamics.verifyContent(param.content)) { "内容最长为 1024 个字符" }
 
         db.transaction {
             val time = LocalDateTime.nowUTC()

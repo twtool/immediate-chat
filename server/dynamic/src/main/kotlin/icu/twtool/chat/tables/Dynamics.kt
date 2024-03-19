@@ -12,6 +12,8 @@ object Dynamics : LongIdTable("tb_dynamic") {
 
     val createAt = datetime("create_at")
     val updateAt = datetime("update_at")
+
+    fun verifyContent(content: String): Boolean = content.trim().length <= 1024
 }
 
 object DynamicAttachments : LongIdTable("tb_dynamic_attachment") {
