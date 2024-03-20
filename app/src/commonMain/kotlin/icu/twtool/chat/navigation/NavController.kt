@@ -29,6 +29,7 @@ class NavController(initial: NavRoute) {
             stack.addAll(customStack)
         } else if (!route.top) stack.add(current)
         else {
+            current.onPop()
             stack.removeAll {
                 it.onPop()
                 true
