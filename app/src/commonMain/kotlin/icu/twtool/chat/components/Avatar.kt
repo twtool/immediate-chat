@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
@@ -12,7 +13,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import icu.twtool.chat.cache.loadImage
+import icu.twtool.chat.cache.produceImageState
 import icu.twtool.image.compose.ICAsyncImage
 import immediatechat.app.generated.resources.Res
 import immediatechat.app.generated.resources.logo
@@ -25,10 +26,11 @@ fun Avatar(
     shape: Shape = MaterialTheme.shapes.extraSmall,
     onClick: (() -> Unit)? = null
 ) {
+    val painter by produceImageState(url)
     ICAsyncImage(
-        { loadImage(url) },
-        painterResource(Res.drawable.logo),
+        painter,
         "Avatar",
+        painterResource(Res.drawable.logo),
         Modifier.size(size).clip(shape)
             .background(MaterialTheme.colorScheme.secondaryContainer)
             .run { if (onClick != null) clickable(onClick = onClick) else this },

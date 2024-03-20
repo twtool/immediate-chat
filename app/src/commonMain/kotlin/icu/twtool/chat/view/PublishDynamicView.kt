@@ -164,7 +164,10 @@ fun AttachmentsChooser(
 @Composable
 fun PublishDynamicView(
     snackbarHostState: SnackbarHostState,
-    paddingValues: PaddingValues, onBack: () -> Unit, onLook: (FileRes) -> Unit
+    paddingValues: PaddingValues,
+    onBack: () -> Unit,
+    onLook: (FileRes) -> Unit,
+    onPublishComplete: () -> Unit,
 ) {
     var content: String by remember { mutableStateOf("") }
     val attachments = remember { mutableStateListOf<ICFile>() }
@@ -203,6 +206,7 @@ fun PublishDynamicView(
                         PublishDynamicParam(realContent, attachmentUrls)
                     )
                     publishState = if (res.success) {
+                        onPublishComplete()
                         content = ""
                         attachments.clear()
                         LoadingDialogState("已发布", success = true)

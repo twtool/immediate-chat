@@ -6,6 +6,8 @@ import icu.twtool.chat.server.account.interceptor.installTokenInterceptor
 import icu.twtool.chat.server.common.BizException
 import icu.twtool.chat.server.common.Res
 import icu.twtool.chat.tables.DynamicAttachments
+import icu.twtool.chat.tables.DynamicComments
+import icu.twtool.chat.tables.DynamicLikes
 import icu.twtool.chat.tables.Dynamics
 import icu.twtool.chat.tables.Timelines
 import icu.twtool.ktor.cloud.KtorCloudApplication
@@ -14,7 +16,6 @@ import icu.twtool.ktor.cloud.discovery.polaris.PolarisRegistry
 import icu.twtool.ktor.cloud.exposed.initExposed
 import icu.twtool.ktor.cloud.plugin.rocketmq.RocketMQPlugin
 import icu.twtool.ktor.cloud.redis.initRedis
-import io.ktor.server.application.ApplicationStarted
 import io.ktor.server.application.ApplicationStopped
 import io.ktor.server.netty.Netty
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -41,7 +42,8 @@ fun main() {
 
         initExposed {
             SchemaUtils.createMissingTablesAndColumns(
-                Dynamics, DynamicAttachments, Timelines
+                Dynamics, DynamicAttachments, DynamicLikes, DynamicComments,
+                Timelines
             )
         }
 

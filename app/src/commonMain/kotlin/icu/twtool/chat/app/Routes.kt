@@ -8,6 +8,7 @@ import icu.twtool.chat.database.database
 import icu.twtool.chat.navigation.NavRoute
 import icu.twtool.chat.server.account.vo.AccountInfo
 import icu.twtool.chat.server.account.vo.FriendRequestVO
+import icu.twtool.chat.server.dynamic.vo.DynamicDetailsVO
 import icu.twtool.chat.state.LoggedInState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -60,6 +61,24 @@ object AcceptFriendRequestRoute : NavRoute("AcceptFriendRequest", false, Friends
 
 val DynamicRoute = NavRoute("Dynamic", true)
 val PublishDynamicRoute = NavRoute("Dynamic", false, DynamicRoute)
+
+object DynamicDetailsRoute : NavRoute("DynamicDetails", false, DynamicRoute) {
+
+    var details by mutableStateOf<DynamicDetailsVO?>(null)
+        private set
+
+    private val stack = mutableListOf<DynamicDetailsVO>()
+
+    override fun onPop() {
+        details = stack.removeLastOrNull()
+    }
+
+    fun open(details: DynamicDetailsVO, opened: () -> Unit) {
+        this.details?.let(stack::add)
+        this.details = details
+        opened()
+    }
+}
 
 @Stable
 object AccountInfoRoute : NavRoute("AccountInfo", false, FriendsRoute) {

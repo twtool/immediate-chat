@@ -58,7 +58,8 @@ object TimelineDao {
                         uid = row[Dynamics.uid],
                         content = row[Dynamics.content],
                         attachments = attachments,
-                        time = row[Dynamics.createAt]
+                        time = row[Dynamics.createAt],
+                        likeIds = DynamicLikeDao.selectUIDListByDynamicID(id)
                     )
                     detail to attachments
                 }

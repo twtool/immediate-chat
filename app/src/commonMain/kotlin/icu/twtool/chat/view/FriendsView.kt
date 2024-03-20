@@ -56,7 +56,6 @@ import icu.twtool.chat.state.FriendsViewState
 import icu.twtool.chat.theme.DisabledAlpha
 import icu.twtool.chat.theme.ElevationTokens
 import immediatechat.app.generated.resources.Res
-import immediatechat.app.generated.resources.ic_channel
 import immediatechat.app.generated.resources.ic_friend
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.DrawableResource
@@ -176,15 +175,15 @@ fun FriendsView(
                         )
                     }
                 }
-                item {
-                    FriendListItem("频道", {}) {
-                        InternalAvatar(
-                            Res.drawable.ic_channel, "频道", avatarModifier,
-                            MaterialTheme.colorScheme.secondaryContainer,
-                            MaterialTheme.colorScheme.onSecondaryContainer,
-                        )
-                    }
-                }
+//                item {
+//                    FriendListItem("频道", {}) {
+//                        InternalAvatar(
+//                            Res.drawable.ic_channel, "频道", avatarModifier,
+//                            MaterialTheme.colorScheme.secondaryContainer,
+//                            MaterialTheme.colorScheme.onSecondaryContainer,
+//                        )
+//                    }
+//                }
 
                 items(filterItems.value, { it.uid }) {
                     FriendListItem(it.nickname ?: "未命名用户", {

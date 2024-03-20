@@ -57,7 +57,7 @@ fun main() = runBlocking {
 
         val windowState = rememberWindowState(
             position = WindowPosition.Aligned(Alignment.Center),
-            width = 840.dp,
+            width = 1000.dp,
 //            width = 480.dp,
             height = 800.dp
         )

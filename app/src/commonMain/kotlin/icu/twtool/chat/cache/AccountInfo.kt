@@ -49,8 +49,9 @@ fun produceAccountInfoState(info: AccountInfo, cacheable: Boolean = false) = pro
 }
 
 @Composable
-fun produceAccountInfoState(uid: Long, cacheable: Boolean = false) = produceState<AccountInfo?>(null) {
-    loadAccountInfo(uid, cacheable)?.let {
-        value = it
+fun produceAccountInfoState(uid: Long, cacheable: Boolean = false) =
+    produceState<AccountInfo?>(null, uid) {
+        loadAccountInfo(uid, cacheable)?.let {
+            value = it
+        }
     }
-}

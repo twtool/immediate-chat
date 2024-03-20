@@ -18,6 +18,7 @@ import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+@Deprecated("using this method can easily cause memory leaks")
 @Composable
 fun ICAsyncImage(
     data: suspend () -> ByteArray?,

@@ -34,6 +34,13 @@ class DynamicViewState {
         loading = true
         log.info("loading")
 
+        if (refresh) {
+            currentPage = 0
+            total = null
+            _data.clear()
+            more = true
+        }
+
         // TODO: 需要解决可能会重复的问题（有人新发了）
         val param = GetTimelinePageParam().apply {
             currentPage = this@DynamicViewState.currentPage + 1
@@ -41,10 +48,11 @@ class DynamicViewState {
         val res = service.getTimelines(param)
         if (res.success) {
             res.data?.let { _data.addAll(it.record) }
+            total = res.data?.total
         } else {
 
         }
+        more = data.size < (total ?: 0).toInt()
         loading = false
-        more = data.size == (total ?: 0).toInt()
     }
 }

@@ -17,6 +17,11 @@ SELECT *
 FROM TbFriend
 WHERE loggedUID = ?;
 
+selectUidsByLoggedUid:
+SELECT uid
+FROM TbFriend
+WHERE loggedUID = :loggedUID;
+
 -- DELETE
 deleteByLoggedUidAndUid:
 DELETE

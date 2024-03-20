@@ -1,7 +1,9 @@
 package icu.twtool.chat
 
 import icu.twtool.chat.dao.DynamicAttachmentDao
+import icu.twtool.chat.dao.DynamicCommentDao
 import icu.twtool.chat.dao.DynamicDao
+import icu.twtool.chat.dao.DynamicLikeDao
 import icu.twtool.chat.dao.TimelineDao
 import icu.twtool.chat.server.account.AccountService
 import icu.twtool.chat.server.account.interceptor.loggedUID
@@ -15,9 +17,12 @@ import icu.twtool.chat.server.dynamic.constants.DYNAMIC_TIMELINE_HANDLE_TOPIC
 import icu.twtool.chat.server.dynamic.meesage.PublishDynamicEvent
 import icu.twtool.chat.server.dynamic.meesage.TimelineEvent
 import icu.twtool.chat.server.dynamic.model.Timeline
+import icu.twtool.chat.server.dynamic.param.CommentDynamicParam
 import icu.twtool.chat.server.dynamic.param.GetTimelinePageParam
+import icu.twtool.chat.server.dynamic.param.LikeDynamicParam
 import icu.twtool.chat.server.dynamic.param.PublishDynamicParam
 import icu.twtool.chat.server.dynamic.vo.DynamicDetailsVO
+import icu.twtool.chat.tables.DynamicComments
 import icu.twtool.chat.tables.Dynamics
 import icu.twtool.ktor.cloud.JSON
 import icu.twtool.ktor.cloud.KtorCloudApplication
@@ -132,4 +137,34 @@ class DynamicServiceImpl(
         }.result()
     }
 
+    override suspend fun details(dynamicId: String): Res<DynamicDetailsVO> {
+        val id = dynamicId.toLongOrNull().run {
+            checkParam(this != null)
+            this!!
+        }
+
+        return db.transaction {
+            DynamicDao.detailsById(id)
+        }.result()
+    }
+
+    override suspend fun like(param: LikeDynamicParam): Res<Unit> {
+        val loggedUID = loggedUID()
+
+        return db.transaction {
+            if (param.cancel) DynamicLikeDao.cancelLike(param.dynamicId, loggedUID)
+            else DynamicLikeDao.addLike(param.dynamicId, loggedUID)
+        }.result()
+    }
+
+    override suspend fun comment(param: CommentDynamicParam): Res<Unit> {
+        checkParam(DynamicComments.verifyContent(param.content)) { "评论长度需要小于 255 个字符" }
+        val loggedUID = loggedUID()
+
+        // TODO: 验证是否有动态的访问权限，验证是否是回复的好友
+
+        return db.transaction {
+            DynamicCommentDao.add(param.dynamicId, loggedUID, param.content, param.replyId)
+        }.result()
+    }
 }
