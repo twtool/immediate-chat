@@ -63,6 +63,7 @@ import icu.twtool.chat.app.DynamicDetailsRoute
 import icu.twtool.chat.cache.produceAccountInfoState
 import icu.twtool.chat.cache.produceImageState
 import icu.twtool.chat.components.Avatar
+import icu.twtool.chat.components.ICCircularProgressIndicator
 import icu.twtool.chat.components.LoadingDialog
 import icu.twtool.chat.components.LoadingDialogState
 import icu.twtool.chat.components.file.FilePosition
@@ -338,8 +339,18 @@ fun DynamicView(
     }
 
     Box(Modifier.fillMaxWidth().padding(paddingValues).nestedScroll(pullToRefreshState.nestedScrollConnection)) {
+        if (pullToRefreshState.isRefreshing) {
+            Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+                ICCircularProgressIndicator()
+            }
+        } else {
+            Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+                ICCircularProgressIndicator({ pullToRefreshState.progress })
+            }
+        }
         LazyColumn(
-            Modifier.fillMaxSize(),
+            Modifier.fillMaxSize()
+                .offset(y = with(LocalDensity.current) { pullToRefreshState.verticalOffset.toDp() }),
         ) {
             items(state.data, key = { it.id }) {
                 DynamicItem(
@@ -367,13 +378,9 @@ fun DynamicView(
                 LaunchedEffect(true) {
                     state.load()
                 }
-                Crossfade(state.loading) {
+                Crossfade(state.loading && !pullToRefreshState.isRefreshing) {
                     if (it) Box(Modifier.fillMaxWidth().height(56.dp), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(
-                            Modifier.size(24.dp),
-                            strokeCap = StrokeCap.Round,
-                            strokeWidth = 4.dp
-                        )
+                        ICCircularProgressIndicator()
                     }
                 }
             }

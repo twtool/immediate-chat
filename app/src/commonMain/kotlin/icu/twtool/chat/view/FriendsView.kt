@@ -22,7 +22,6 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -49,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import icu.twtool.chat.app.AccountInfoRoute
 import icu.twtool.chat.app.NewFriendRoute
 import icu.twtool.chat.components.Avatar
+import icu.twtool.chat.components.ICCircularProgressIndicator
 import icu.twtool.chat.navigation.NavRoute
 import icu.twtool.chat.navigation.window.ICWindowSizeClass
 import icu.twtool.chat.navigation.window.ICWindowWidthSizeClass
@@ -154,11 +154,11 @@ fun FriendsView(
         Box(Modifier.nestedScroll(refreshState.nestedScrollConnection)) {
             if (refreshState.isRefreshing) {
                 Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
+                    ICCircularProgressIndicator()
                 }
             } else {
                 Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator({ refreshState.progress })
+                    ICCircularProgressIndicator({ refreshState.progress })
                 }
             }
 
