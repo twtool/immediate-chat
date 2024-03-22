@@ -29,6 +29,7 @@ import icu.twtool.chat.app.PublishDynamicRoute
 import icu.twtool.chat.components.file.FileRes
 import icu.twtool.chat.components.file.LookFile
 import icu.twtool.chat.material.ICScaffold
+import icu.twtool.chat.navigation.NavController
 import icu.twtool.chat.navigation.rememberNavController
 import icu.twtool.chat.navigation.window.ICWindowSizeClass
 import icu.twtool.chat.navigation.window.ICWindowWidthSizeClass
@@ -38,8 +39,8 @@ import icu.twtool.chat.utils.ICBackHandler
 @Composable
 fun App(
     windowSize: ICWindowSizeClass,
+    controller: NavController = rememberNavController(if (LoggedInState.token == null) LoginRoute else MessagesRoute),
 ) {
-    val controller = rememberNavController(if (LoggedInState.token == null) LoginRoute else MessagesRoute)
 
     var lookFile by remember { mutableStateOf<FileRes?>(null) }
 

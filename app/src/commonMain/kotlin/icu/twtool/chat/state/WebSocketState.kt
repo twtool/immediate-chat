@@ -1,6 +1,7 @@
 package icu.twtool.chat.state
 
 import androidx.compose.runtime.mutableStateOf
+import icu.twtool.chat.cache.loadAccountInfo
 import icu.twtool.chat.database.database
 import icu.twtool.chat.server.chat.vo.MessageVO
 import icu.twtool.chat.server.common.CHAT_WEBSOCKET_PATH
@@ -10,6 +11,7 @@ import icu.twtool.chat.server.gateway.param.WebSocketParamType
 import icu.twtool.chat.server.gateway.vo.WebSocketVoType
 import icu.twtool.chat.service.creator
 import icu.twtool.chat.utils.JSON
+import icu.twtool.chat.utils.Notification
 import icu.twtool.ktor.cloud.client.kmp.websocket.websocket
 import icu.twtool.logger.getLogger
 import io.ktor.client.plugins.websocket.ClientWebSocketSession
@@ -42,6 +44,8 @@ class WebSocketUpdate(
 }
 
 object WebSocketState {
+
+    var notification: Notification? = null
 
     private val log = getLogger("WebSocketState")
 
@@ -128,22 +132,28 @@ object WebSocketState {
 
             val type = WebSocketVoType.entries[buffer.getInt()]
 
+            val content = ByteArray(buffer.remaining())
+            buffer.get(content)
+            val contentStr = String(content)
+
             when (type) {
                 WebSocketVoType.Message -> {
-                    val content = ByteArray(buffer.remaining())
-                    buffer.get(content)
-                    val messageStr = String(content)
-                    val message = Json.decodeFromString<MessageVO>(messageStr)
+                    val message = Json.decodeFromString<MessageVO>(contentStr)
                     val addressee = message.addressee
                     val time = message.createTime.epochSeconds()
                     database.messageDetailsQueries.insertOne(
                         addressee,
                         message.sender,
-                        messageStr,
+                        contentStr,
                         time,
                         time
                     )
                     database.messageQueries.updateLastMessageId(addressee, message.sender)
+                    scope.launch {
+                        loadAccountInfo(message.sender)?.let {
+                            notification?.message(it, message)
+                        }
+                    }
                 }
             }
             _updated.emit(WebSocketUpdate(type))

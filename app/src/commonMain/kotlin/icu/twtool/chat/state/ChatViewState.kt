@@ -60,28 +60,34 @@ class ChatViewState(scope: CoroutineScope, private val friendUID: Long) {
     val messages = mutableStateListOf<ChatMessageItem>()
     private var lastMessageID = 0L
 
-    private suspend fun lockSelectNow() {
-        mutex.withLock {
-            selectNow()
+    private suspend fun lockSelectNow(limit: Long? = null) {
+        withContext(Dispatchers.IO) {
+            mutex.withLock {
+                selectNow(limit)
+            }
         }
     }
 
-    private fun selectNow() {
+    private fun selectNow(limit: Long? = null) {
         val loggedUID = LoggedInState.info?.uid ?: return
         log.info("selectNow: $this")
-        val items = database.messageDetailsQueries.selectNew(
-            loggedUID, friendUID, lastMessageID
-        ) { id, lu, _, message, _, _ ->
+        val mapper = { id: Long, lu: Long, _: Long, message: String, _: Long, _: Long ->
             lastMessageID = max(lastMessageID, id)
             ChatMessageItem.from(id, lu, JSON.decodeFromString(message))
-        }.executeAsList()
+        }
+        val items = database.messageDetailsQueries
+            .run {
+                if (limit != null) selectNewLimit(loggedUID, friendUID, lastMessageID, limit, mapper)
+                else selectNew(loggedUID, friendUID, lastMessageID, mapper)
+            }
+            .executeAsList()
 
         messages.addAll(0, items)
     }
 
     init {
         scope.launch {
-            lockSelectNow()
+            lockSelectNow(20)
             WebSocketState.updated.collectLatest {
                 log.info("updated state: $it")
                 if (it.type == WebSocketVoType.Message) {

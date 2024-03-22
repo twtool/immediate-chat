@@ -3,12 +3,23 @@ package icu.twtool.chat.server.chat.model
 import kotlinx.serialization.Serializable
 
 @Serializable
-sealed class MessageContent
+sealed class MessageContent {
+
+    abstract fun renderText(): String
+}
 
 @Serializable
 data class PlainMessageContent(
     val value: String
 ) : MessageContent() {
 
-    override fun toString(): String = value
+    override fun renderText(): String = value
+}
+
+@Serializable
+data class ImageMessageContent(
+    val url: String
+) : MessageContent() {
+
+    override fun renderText(): String = "[图片]"
 }

@@ -90,8 +90,8 @@ fun MessageViewItem(item: MessageItem, onClick: () -> Unit, selected: Boolean) {
 @Composable
 fun MessagesView(paddingValues: PaddingValues, windowSize: ICWindowSizeClass, navigateToChatRoute: () -> Unit) {
     val selectedUid = ChatRoute.info?.uid
-    val state = remember { MessagesViewState() }
     val scope = rememberCoroutineScope()
+    val state = remember { MessagesViewState(scope) }
 
     LaunchedEffect(Unit) {
         state.loadList()

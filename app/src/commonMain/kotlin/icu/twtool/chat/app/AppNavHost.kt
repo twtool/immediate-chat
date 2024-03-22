@@ -61,6 +61,7 @@ fun AppNavHost(
                         state.windowSize.widthSizeClass,
                         paddingValues,
                         onBack = { controller.pop() },
+                        onLookFile = onLook,
                         navigateToChatSettingsRoute = {
                             // TODO
                         },
@@ -73,6 +74,7 @@ fun AppNavHost(
         composable(ChatRoute) { state, paddingValues ->
             ChatView(
                 state.windowSize.widthSizeClass, paddingValues, onBack = { controller.pop() },
+                onLookFile = onLook,
                 navigateToChatSettingsRoute = {
                     // TODO
                 },
@@ -93,6 +95,7 @@ fun AppNavHost(
                         state.windowSize.widthSizeClass,
                         paddingValues,
                         onBack = { controller.pop() },
+                        onLookFile = onLook,
                         navigateToChatSettingsRoute = {},
                         navigateChatRoute = { controller.navigateTo(ChatRoute, listOf(MessagesRoute)) },
                         navigateAccountInfoRoute = { controller.navigateTo(AccountInfoRoute, listOf(FriendsRoute)) }

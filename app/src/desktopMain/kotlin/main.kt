@@ -25,9 +25,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Tray
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.awaitApplication
+import androidx.compose.ui.window.rememberTrayState
 import androidx.compose.ui.window.rememberWindowState
 import icu.twtool.cache.DesktopCache
 import icu.twtool.chat.App
@@ -43,7 +45,12 @@ import icu.twtool.chat.utils.KeyEventStore
 import icu.twtool.chat.utils.LocalKeyEventStore
 import icu.twtool.chat.utils.loadLibrary
 import icu.twtool.cos.DesktopCosClient
+import immediatechat.app.generated.resources.Res
+import immediatechat.app.generated.resources.app_name
+import immediatechat.app.generated.resources.logo
 import kotlinx.coroutines.runBlocking
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 
 fun main() = runBlocking {
     loadLibrary("mmkv")
@@ -51,8 +58,11 @@ fun main() = runBlocking {
     DesktopCosClient.initialize(COS_CONFIG)
 
     val service = WebSocketService()
-    service.start()
     awaitApplication {
+        val trayState = rememberTrayState()
+
+        Tray(painterResource(Res.drawable.logo), state = trayState, tooltip = stringResource(Res.string.app_name))
+        service.start(trayState)
         systemBarHeight = 24.dp
 
         val windowState = rememberWindowState(
@@ -67,7 +77,7 @@ fun main() = runBlocking {
             Window(
                 ::exitApplication,
                 state = windowState,
-                title = "即时聊天",
+                title = stringResource(Res.string.app_name),
                 icon = painterResource("drawable/logo.xml"),
                 transparent = true, undecorated = true,
                 onPreviewKeyEvent = on@{

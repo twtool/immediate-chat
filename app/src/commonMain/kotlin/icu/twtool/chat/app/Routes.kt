@@ -28,7 +28,7 @@ object ChatRoute : NavRoute("Chat", false, MessagesRoute) {
         info = stack.removeLastOrNull()
     }
 
-    suspend fun open(info: AccountInfo, opened: () -> Unit) {
+    suspend fun open(info: AccountInfo, opened: suspend () -> Unit) {
         withContext(Dispatchers.IO) {
             val loggedUID = LoggedInState.info?.uid ?: return@withContext
             database.messageQueries.upsertByLoggedUIDAndID(

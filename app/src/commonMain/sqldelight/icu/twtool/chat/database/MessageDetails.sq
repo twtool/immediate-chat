@@ -15,3 +15,7 @@ VALUES (?, ?, ?, ?, ?);
 selectNew:
 SELECT * FROM TbMessageDetails
 WHERE loggedUID = :loggedUID AND uid = :uid AND id > :id ORDER BY id DESC;
+
+selectNewLimit:
+SELECT * FROM TbMessageDetails
+WHERE loggedUID = :loggedUID AND uid = :uid AND id > :id ORDER BY id DESC LIMIT :limit;

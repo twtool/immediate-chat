@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">即聊</string>
+
+    <string name="message_channel_name">消息通知</string>
+    <string name="message_channel_description">用来发送收到的好友信息的通知渠道</string>
 </resources>

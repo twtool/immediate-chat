@@ -1,7 +1,9 @@
 package icu.twtool.chat.view
 
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,9 +20,9 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -65,26 +67,34 @@ import androidx.compose.ui.window.Popup
 import icu.twtool.chat.app.AccountInfoRoute
 import icu.twtool.chat.app.ChatRoute
 import icu.twtool.chat.cache.loadAccountInfo
+import icu.twtool.chat.cache.produceImageState
 import icu.twtool.chat.components.AccountInfoCard
 import icu.twtool.chat.components.Avatar
 import icu.twtool.chat.components.BackTopAppBar
+import icu.twtool.chat.components.LoadingDialogState
+import icu.twtool.chat.components.ThumbnailsImage
 import icu.twtool.chat.components.WindowDialog
+import icu.twtool.chat.components.file.FileRes
 import icu.twtool.chat.navigation.window.ICWindowWidthSizeClass
 import icu.twtool.chat.server.account.vo.AccountInfo
+import icu.twtool.chat.server.chat.model.ImageMessageContent
 import icu.twtool.chat.server.chat.model.MessageContent
 import icu.twtool.chat.server.chat.model.PlainMessageContent
-import icu.twtool.chat.server.common.datetime.currentTimeZone
 import icu.twtool.chat.state.ChatMessageItem
 import icu.twtool.chat.state.ChatViewState
 import icu.twtool.chat.state.LoggedInState
-import icu.twtool.chat.state.MessageTimeTimeFormat
 import icu.twtool.chat.theme.ElevationTokens
+import icu.twtool.chat.utils.formatLocal
 import icu.twtool.chat.utils.onEnterKeyPressed
+import icu.twtool.chat.utils.rememberFileChooser
+import icu.twtool.cos.CommonObjectMetadata
+import icu.twtool.cos.getCosClient
 import icu.twtool.logger.getLogger
 import immediatechat.app.generated.resources.Res
 import immediatechat.app.generated.resources.ic_emoji
+import immediatechat.app.generated.resources.ic_photo
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.datetime.format
 import org.jetbrains.compose.resources.painterResource
 
 private val log = getLogger("icu.twtool.chat.view.ChatView.kt")
@@ -103,6 +113,7 @@ fun ChatView(
     widthSizeClass: ICWindowWidthSizeClass,
     paddingValues: PaddingValues,
     onBack: () -> Unit,
+    onLookFile: (FileRes) -> Unit,
     navigateToChatSettingsRoute: () -> Unit,
     navigateChatRoute: () -> Unit,
     navigateAccountInfoRoute: () -> Unit,
@@ -111,6 +122,24 @@ fun ChatView(
     val scope = rememberCoroutineScope()
     val state = remember(info.uid) { ChatViewState(scope, info.uid) }
     var showChatSettingPopup by remember { mutableStateOf(false) }
+
+    var sendImageDialogState by remember { mutableStateOf<LoadingDialogState?>(null) }
+
+    val sendImageFileChooser = rememberFileChooser {
+        if (it.isEmpty()) return@rememberFileChooser
+        val size = it.size
+        scope.launch {
+            it.forEachIndexed { index, file ->
+                sendImageDialogState = LoadingDialogState("发送中($index/$size)")
+                val delay = launch { delay(200) }
+                val key = "res/${LoggedInState.info?.uid}/${file.hashKey}"
+                getCosClient().putObject(key, file.inputStream(), CommonObjectMetadata(file.size))
+                state.send(ImageMessageContent(key), info.uid)
+                delay.join()
+            }
+            sendImageDialogState = null
+        }
+    }
     Column(Modifier.fillMaxSize()) {
         ChatInfoTopAppBar(
             onBack, info.nickname ?: "未命名用户",
@@ -127,6 +156,7 @@ fun ChatView(
                     ChatViewMessages(
                         widthSizeClass,
                         state,
+                        onLookFile = onLookFile,
                         navigateChatRoute,
                         navigateAccountInfoRoute,
                         Modifier.fillMaxWidth()
@@ -138,7 +168,14 @@ fun ChatView(
                             state.send(it, info.uid)
                         }
                     }
-                else ChatViewExpandedInput(state.sending, paddingValues) {
+                else ChatViewExpandedInput(
+                    state.sending,
+                    paddingValues,
+                    sendImage = {
+                        scope.launch {
+                            sendImageFileChooser.launch()
+                        }
+                    }) {
                     scope.launch {
                         state.send(it, info.uid)
                     }
@@ -156,6 +193,7 @@ fun ChatViewMessageItem(
     widthSizeClass: ICWindowWidthSizeClass,
     item: ChatMessageItem,
     onLookInfo: (AccountInfo?) -> Unit,
+    onLookFile: (FileRes) -> Unit,
     navigateChatRoute: (AccountInfo?) -> Unit
 ) {
     val info by produceState<AccountInfo?>(null) {
@@ -176,12 +214,10 @@ fun ChatViewMessageItem(
                     if (widthSizeClass == ICWindowWidthSizeClass.Expanded) showPopup.value = true
                     else onLookInfo(info)
                 }
-                SelectionContainer {
-                    Text(
-                        item.message.createTime.currentTimeZone().format(MessageTimeTimeFormat),
-                        style = MaterialTheme.typography.labelSmall
-                    )
-                }
+                Text(
+                    item.message.createTime.formatLocal(),
+                    style = MaterialTheme.typography.labelSmall
+                )
                 if (showPopup.value) info?.let {
                     AccountInfoCardPopup(
                         it,
@@ -212,19 +248,46 @@ fun ChatViewMessageItem(
             Modifier.weight(1f),
             horizontalArrangement = if (item.me) Arrangement.End else Arrangement.Start
         ) {
+            RenderMessageContent(item.message.content, onLookFile = onLookFile)
+        }
+        if (item.me) avatar() else placeholder()
+    }
+}
+
+@Composable
+private fun RenderMessageContent(message: MessageContent, onLookFile: (FileRes) -> Unit) {
+    when (message) {
+        is PlainMessageContent -> {
             Surface(
                 color = MaterialTheme.colorScheme.secondaryContainer,
                 contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                 shape = MaterialTheme.shapes.small,
             ) {
                 SelectionContainer(Modifier.padding(8.dp)) {
-                    Text(
-                        (item.message.content as PlainMessageContent).value,
-                    )
+                    Text(message.value)
                 }
             }
         }
-        if (item.me) avatar() else placeholder()
+
+        is ImageMessageContent -> {
+            val painter by produceImageState(message.url, queryParameter = "imageView2/2/w/500/h/500/rq/50")
+            if (painter != null) {
+                painter?.let {
+                    ThumbnailsImage(
+                        it,
+                        Modifier.clip(MaterialTheme.shapes.small).widthIn(max = 200.dp),
+                        onLook = onLookFile
+                    )
+                }
+            } else {
+                Box(
+                    Modifier.size(64.dp).background(MaterialTheme.colorScheme.onSecondaryContainer),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(painterResource(Res.drawable.ic_photo), null)
+                }
+            }
+        }
     }
 }
 
@@ -232,6 +295,7 @@ fun ChatViewMessageItem(
 fun ChatViewMessages(
     widthSizeClass: ICWindowWidthSizeClass,
     state: ChatViewState,
+    onLookFile: (FileRes) -> Unit,
     navigateChatRoute: () -> Unit,
     navigateAccountInfoRoute: () -> Unit,
     modifier: Modifier = Modifier
@@ -276,6 +340,7 @@ fun ChatViewMessages(
                         navigateAccountInfoRoute()
                     }
                 },
+                onLookFile = onLookFile,
                 navigateChatRoute = {
                     it?.let { info ->
                         scope.launch {
@@ -292,7 +357,7 @@ fun ChatViewMessages(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChatViewIcon(tooltip: String, icon: Painter) {
+fun ChatViewIcon(tooltip: String, icon: Painter, onClick: () -> Unit) {
     TooltipBox(
         TooltipDefaults.rememberPlainTooltipPositionProvider(),
         {
@@ -302,20 +367,25 @@ fun ChatViewIcon(tooltip: String, icon: Painter) {
         },
         rememberTooltipState()
     ) {
-        Icon(icon, tooltip, Modifier.size(20.dp))
+        Icon(icon, tooltip, Modifier.size(20.dp).clickable(onClick = onClick))
     }
 }
 
 @Composable
-fun ChatViewExpandedInput(sending: Boolean, paddingValues: PaddingValues, onSend: (value: MessageContent) -> Unit) {
+fun ChatViewExpandedInput(
+    sending: Boolean, paddingValues: PaddingValues,
+    sendImage: () -> Unit,
+    onSend: (value: MessageContent) -> Unit,
+) {
     var inputValue: String by remember { mutableStateOf("") }
     Surface(
         Modifier.fillMaxWidth()/*padding(bottom = paddingValues.calculateBottomPadding())*/,
         color = MaterialTheme.colorScheme.surfaceColorAtElevation(ElevationTokens.Level1)
     ) {
         Column(Modifier.navigationBarsPadding().imePadding()) {
-            Row(Modifier.padding(8.dp)) {
-                ChatViewIcon("表情", painterResource(Res.drawable.ic_emoji))
+            Row(Modifier.padding(8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                ChatViewIcon("表情", painterResource(Res.drawable.ic_emoji)) {}
+                ChatViewIcon("图片", painterResource(Res.drawable.ic_photo)) { sendImage() }
             }
             BasicTextField(
                 inputValue, { inputValue = it },
@@ -348,7 +418,7 @@ fun ChatViewInput(sending: Boolean, paddingValues: PaddingValues, onSend: (value
         Modifier.fillMaxWidth()/*.padding(bottom = paddingValues.calculateBottomPadding())*/,
         color = MaterialTheme.colorScheme.surfaceColorAtElevation(ElevationTokens.Level2)
     ) {
-        Column(Modifier.imePadding()) {
+        Column(Modifier.imePadding().navigationBarsPadding()) {
             Row(
                 Modifier.height(IntrinsicSize.Min).padding(8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
