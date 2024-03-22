@@ -13,17 +13,23 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -78,10 +84,13 @@ private fun DynamicDetailsTopAppBar(onBack: () -> Unit) {
     BackTopAppBar(onBack, "动态详情")
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DynamicDetailsView(onBack: () -> Unit, onLook: (FileRes) -> Unit) {
     Column(Modifier.fillMaxWidth()) {
         DynamicDetailsTopAppBar(onBack)
+
+        val scope = rememberCoroutineScope()
 
         var loadingState by remember { mutableStateOf<LoadingDialogState?>(null) }
 
@@ -108,6 +117,34 @@ fun DynamicDetailsView(onBack: () -> Unit, onLook: (FileRes) -> Unit) {
             }
         }
 
+        var showDeleteAlertDialog by remember { mutableStateOf(false) }
+        if (showDeleteAlertDialog) {
+            AlertDialog(
+                onDismissRequest = { showDeleteAlertDialog = false },
+                title = {
+                    Text("删除该动态？")
+                },
+                confirmButton = {
+                    TextButton({
+                        if (loadingState != null) return@TextButton
+                        loadingState = LoadingDialogState("删除中...")
+                        scope.launch {
+                            val res = DynamicService.get().delete(details.id.toString())
+                            val delay = launch { delay(200) }
+                            delay.join()
+                            loadingState = if (res.success) LoadingDialogState("删除成功", success = true)
+                            else LoadingDialogState(res.msg, error = true)
+                            delay(500)
+                            if (!res.success) loadingState = null
+                            onBack()
+                        }
+                    }) {
+                        Text("确定")
+                    }
+                }
+            )
+        }
+
         val friendsInfos by produceState(mapOf<Long, AccountInfo>()) {
             withContext(Dispatchers.IO) {
                 val res = mutableMapOf<Long, AccountInfo>()
@@ -122,8 +159,6 @@ fun DynamicDetailsView(onBack: () -> Unit, onLook: (FileRes) -> Unit) {
                 value = res
             }
         }
-
-        val scope = rememberCoroutineScope()
 
         val info by produceAccountInfoState(details.uid, true)
         val avatar: Painter? by produceImageState(
@@ -158,7 +193,6 @@ fun DynamicDetailsView(onBack: () -> Unit, onLook: (FileRes) -> Unit) {
                 Spacer(Modifier.requiredHeight(4.dp))
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(
@@ -166,6 +200,18 @@ fun DynamicDetailsView(onBack: () -> Unit, onLook: (FileRes) -> Unit) {
                         style = MaterialTheme.typography.labelMedium,
                         color = LocalContentColor.current.copy(alpha = DisabledAlpha)
                     )
+                    Spacer(Modifier.requiredWidth(4.dp))
+                    if (details.uid == LoggedInState.info?.uid) {
+                        IconButton({
+                            showDeleteAlertDialog = true
+                        }, Modifier.size(24.dp)) {
+                            Icon(
+                                Icons.Filled.Delete, null, Modifier.size(12.dp),
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                    Spacer(Modifier.weight(1f))
                     IconButton({
                         if (loadingState != null) return@IconButton
                         loadingState = LoadingDialogState("请稍候...")

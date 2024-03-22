@@ -14,3 +14,8 @@ data class PublishDynamicEvent(
     val uid: Long,
     val time: LocalDateTime
 ) : TimelineEvent()
+
+@Serializable
+data class DeleteDynamicEvent(
+    val id: Long
+) : TimelineEvent()

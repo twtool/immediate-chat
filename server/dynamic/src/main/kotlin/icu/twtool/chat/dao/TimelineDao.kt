@@ -9,11 +9,23 @@ import icu.twtool.chat.tables.Dynamics
 import icu.twtool.chat.tables.Timelines
 import org.jetbrains.exposed.sql.JoinType
 import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.alias
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.batchInsert
+import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.sql.insert
 
 object TimelineDao {
+
+    fun insert(timeline: Timeline): Boolean {
+        return Timelines.insert {
+            it[uid] = timeline.uid
+            it[friendUID] = timeline.friendUID
+            it[dynamicId] = timeline.dynamicId
+            it[publishAt] = timeline.publishAt
+        }.insertedCount > 0
+    }
 
     fun batchInsert(models: List<Timeline>) {
         Timelines.batchInsert(models, shouldReturnGeneratedValues = false) {
@@ -70,5 +82,9 @@ object TimelineDao {
             param.pageSize,
             timelineAllQuery.count()
         )
+    }
+
+    fun deleteByDynamicId(dynamicId: Long): Boolean {
+        return Timelines.deleteWhere { Timelines.dynamicId eq dynamicId } > 0
     }
 }

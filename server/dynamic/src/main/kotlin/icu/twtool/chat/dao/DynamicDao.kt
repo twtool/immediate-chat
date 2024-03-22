@@ -4,6 +4,8 @@ import icu.twtool.chat.server.dynamic.vo.DynamicDetailsVO
 import icu.twtool.chat.tables.Dynamics
 import kotlinx.datetime.LocalDateTime
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insertAndGetId
 
 object DynamicDao {
@@ -36,4 +38,11 @@ object DynamicDao {
                     comments = comments
                 )
             }.firstOrNull()
+
+    fun deleteById(loggedUID: Long, id: Long): Boolean {
+        return (Dynamics.select(Dynamics.id).where { (Dynamics.uid eq loggedUID) and (Dynamics.id eq id) }.forUpdate()
+            .map { row ->
+                Dynamics.deleteWhere { Dynamics.id eq row[Dynamics.id] }
+            }.firstOrNull() ?: 0) > 0
+    }
 }

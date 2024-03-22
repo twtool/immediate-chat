@@ -32,6 +32,9 @@ interface DynamicService {
     @RequestMapping(HttpMethod.Post, "comment")
     suspend fun comment(@Body param: CommentDynamicParam): Res<Unit>
 
+    @RequestMapping(HttpMethod.Delete, "delete")
+    suspend fun delete(@Query dynamicId: String): Res<Unit>
+
     companion object
 }
 
