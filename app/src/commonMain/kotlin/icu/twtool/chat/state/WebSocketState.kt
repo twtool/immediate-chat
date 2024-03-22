@@ -57,6 +57,7 @@ object WebSocketState {
     private val supervisorJob = SupervisorJob()
     private val scope = CoroutineScope(supervisorJob + Dispatchers.IO)
     private var heartbeatJob: Job? = null
+    private var retry: Int = 0
 
     fun start() {
         scope.launch {
@@ -78,7 +79,7 @@ object WebSocketState {
         }
         connecting = false
         log.info("reconnect after 5 seconds.")
-        delay(5000)
+        if (++retry > 1) delay(retry.coerceAtMost(5) * 1000L)
         reconnect()
     }
 
@@ -109,6 +110,7 @@ object WebSocketState {
         val session = getSession()
         connecting = false
         error.value = null
+        retry = 0
         this.session = session
         startHeartbeat(session)
 
