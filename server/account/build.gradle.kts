@@ -17,6 +17,8 @@ application {
 dependencies {
     implementation(projects.server.account.accountInterface)
     implementation(projects.server.account.accountInterceptor)
+    implementation(projects.server.dynamic.dynamicInterface)
+    implementation(projects.server.gateway.gatewayInterface)
 
     implementation(libs.exposed.jdbc)
     implementation(libs.exposed.kotlin.datetime)
@@ -25,6 +27,7 @@ dependencies {
     implementation(libs.ktor.cloud.discovery.polaris)
     implementation(libs.ktor.cloud.exposed)
     implementation(libs.ktor.cloud.redis)
+    implementation(libs.ktor.cloud.plugin.rocketmq)
     implementation(libs.ktor.cloud.route.service)
     implementation(libs.ktor.server.netty)
     implementation(libs.mysql)

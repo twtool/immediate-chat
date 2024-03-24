@@ -6,4 +6,6 @@ import icu.twtool.chat.server.chat.vo.MessageVO
 interface Notification {
 
     suspend fun message(info: AccountInfo, message: MessageVO)
+
+    suspend fun notify(notificationId: Int, title: String, content: String)
 }

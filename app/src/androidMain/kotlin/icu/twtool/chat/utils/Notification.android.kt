@@ -27,10 +27,14 @@ class AndroidNotification(private val context: Context) : Notification {
 
     private val manager: NotificationManagerCompat = NotificationManagerCompat.from(context)
 
-    override suspend fun message(info: AccountInfo, message: MessageVO) {
+    private fun checkPermission(): Boolean {
         val permission = if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.TIRAMISU) PackageManager.PERMISSION_GRANTED
         else ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
-        if (permission != PackageManager.PERMISSION_GRANTED) return
+        return permission == PackageManager.PERMISSION_GRANTED
+    }
+
+    override suspend fun message(info: AccountInfo, message: MessageVO) {
+        if (!checkPermission()) return
 
         // 为应用程序中的活动创建明确的意图。
         val intent = Intent(context, MainActivity::class.java).apply {
@@ -65,6 +69,27 @@ class AndroidNotification(private val context: Context) : Notification {
 
         // TODO: 处理通知 ID
         manager.notify(info.uid.toInt(), builder.build())
+    }
+
+    override suspend fun notify(notificationId: Int, title: String, content: String) {
+        if (!checkPermission()) return
+
+        val intent = Intent(context, MainActivity::class.java).apply {
+            setAction(Intent.ACTION_MAIN)
+        }
+
+        val pendingIntent: PendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+
+        val builder = NotificationCompat.Builder(context, MESSAGE_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setContentTitle(title)
+            .setContentText(content)
+            .setContentIntent(pendingIntent) // 设置当用户点击通知时触发的意图。
+            .setAutoCancel(true)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+
+        // TODO: 处理通知 ID
+        manager.notify(notificationId, builder.build())
     }
 }
 

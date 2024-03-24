@@ -18,4 +18,8 @@ class DesktopNotification(private val trayState: TrayState) : Notification {
 //            },
 //        ))
     }
+
+    override suspend fun notify(notificationId: Int, title: String, content: String) {
+
+    }
 }

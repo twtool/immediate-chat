@@ -56,4 +56,9 @@ object AccountDao {
             it[nickname] = info.nickname
             it[avatarUrl] = info.avatarUrl
         } == 1
+
+    fun selectNicknameByUid(uid: Long): String? =
+        Accounts.select(Accounts.nickname)
+            .where(Accounts.uid eq uid)
+            .map { it[Accounts.nickname] }.firstOrNull()
 }

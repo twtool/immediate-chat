@@ -17,6 +17,7 @@ import icu.twtool.chat.server.common.page.PageVO
 import icu.twtool.chat.server.common.result
 import icu.twtool.chat.server.dynamic.DynamicService
 import icu.twtool.chat.server.dynamic.constants.DYNAMIC_TIMELINE_HANDLE_TOPIC
+import icu.twtool.chat.server.dynamic.meesage.AddFriendEvent
 import icu.twtool.chat.server.dynamic.meesage.DeleteDynamicEvent
 import icu.twtool.chat.server.dynamic.meesage.PublishDynamicEvent
 import icu.twtool.chat.server.dynamic.meesage.TimelineEvent
@@ -104,6 +105,20 @@ class DynamicServiceImpl(
                             assertTrue(db.transaction {
                                 TimelineDao.deleteByDynamicId(message.id)
                             })
+                            true
+                        }
+                        if (!success) return@runBlocking ConsumeResult.FAILURE
+                    }
+
+                    is AddFriendEvent -> {
+                        // 加分布式锁
+                        val lockKey = "timeline:handle:uid:${message.friendUID}"
+                        val success = redis.lock(lockKey) {
+                            db.transaction {
+                                TimelineDao.batchInsert(DynamicDao.selectDynamicIdAndPublishTimeByUID(message.friendUID)
+                                    .map { Timeline(message.uid, message.friendUID, it.first, it.second) }
+                                )
+                            }
                             true
                         }
                         if (!success) return@runBlocking ConsumeResult.FAILURE

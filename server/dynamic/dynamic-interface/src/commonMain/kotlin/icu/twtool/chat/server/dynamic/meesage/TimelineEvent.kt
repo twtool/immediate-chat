@@ -19,3 +19,9 @@ data class PublishDynamicEvent(
 data class DeleteDynamicEvent(
     val id: Long
 ) : TimelineEvent()
+
+@Serializable
+data class AddFriendEvent(
+    val uid: Long,
+    val friendUID: Long,
+) : TimelineEvent()

@@ -24,10 +24,19 @@ import icu.twtool.chat.server.common.assertNotNull
 import icu.twtool.chat.server.common.assertTrue
 import icu.twtool.chat.server.common.checkParam
 import icu.twtool.chat.server.common.result
+import icu.twtool.chat.server.dynamic.constants.DYNAMIC_TIMELINE_HANDLE_TOPIC
+import icu.twtool.chat.server.dynamic.meesage.AddFriendEvent
+import icu.twtool.chat.server.dynamic.meesage.TimelineEvent
+import icu.twtool.chat.server.gateway.topic.FriendRequestPushMessage
+import icu.twtool.chat.server.gateway.topic.PUSH_MESSAGE_TOPIC
+import icu.twtool.chat.server.gateway.topic.PushMessage
 import icu.twtool.chat.tables.FriendRequests
+import icu.twtool.ktor.cloud.JSON
 import icu.twtool.ktor.cloud.KtorCloudApplication
 import icu.twtool.ktor.cloud.exposed.database
 import icu.twtool.ktor.cloud.exposed.transaction
+import icu.twtool.ktor.cloud.plugin.rocketmq.RocketMQPlugin
+import icu.twtool.ktor.cloud.plugin.rocketmq.buildMessage
 import icu.twtool.ktor.cloud.redis.incr
 import icu.twtool.ktor.cloud.redis.redis
 import icu.twtool.ktor.cloud.route.service.annotation.ServiceImpl
@@ -39,6 +48,7 @@ import kotlinx.serialization.json.Json
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.codec.digest.HmacAlgorithms
 import org.apache.commons.codec.digest.HmacUtils
+import java.io.Closeable
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.math.pow
@@ -46,7 +56,8 @@ import kotlin.random.Random
 import kotlin.time.Duration.Companion.days
 
 @ServiceImpl
-class AccountServiceImpl(application: KtorCloudApplication) : AccountService {
+class AccountServiceImpl(application: KtorCloudApplication, rocketMQPlugin: RocketMQPlugin) : AccountService,
+    Closeable {
 
     private val pwdSecret = application.config[PwdSecretKey]
     private val tokenSecret = application.config[TokenSecretKey]
@@ -54,6 +65,13 @@ class AccountServiceImpl(application: KtorCloudApplication) : AccountService {
 
     private val redis = application.redis
     private val db = application.database
+
+    private val rocketMQProducer =
+        rocketMQPlugin.getProducer(arrayOf(PUSH_MESSAGE_TOPIC, DYNAMIC_TIMELINE_HANDLE_TOPIC))
+
+    override fun close() {
+        rocketMQProducer.close()
+    }
 
     override suspend fun login(param: LoginParam): Res<String> = db.transaction {
         val uid = param.principal.toLongOrNull()
@@ -110,14 +128,25 @@ class AccountServiceImpl(application: KtorCloudApplication) : AccountService {
         val loggedUID = loggedUID()
 
         return db.transaction {
-            if (!AccountDao.existsUid(param.uid)) return@transaction Res.error(AccountStatus.AccountNotExists)
+            checkParam(!FriendDao.exists(loggedUID, param.uid)) { "对方已是好友" }
+            val nickname = assertNotNull(AccountDao.selectNicknameByUid(param.uid), AccountStatus.AccountNotExists)
 
             val record = FriendRequestDao.last(loggedUID, param.uid)
             if (record != null && record.status == FriendRequestStatus.REQUEST && record.isValid()) {
                 return@transaction Res.error(msg = "请等待对方验证")
             }
-            // TODO: 发送好友申请推送
-            FriendRequestDao.add(loggedUID, param.uid, param.msg.trim()).result()
+
+            val msg = param.msg.trim()
+            val id = FriendRequestDao.add(loggedUID, param.uid, msg)
+            rocketMQProducer.send(
+                buildMessage(
+                    PUSH_MESSAGE_TOPIC,
+                    JSON.encodeToString<PushMessage>(FriendRequestPushMessage(id, nickname, msg, param.uid))
+                        .toByteArray(),
+                    keys = arrayOf(loggedUID.toString())
+                )
+            )
+            Res.success()
         }
     }
 
@@ -157,6 +186,26 @@ class AccountServiceImpl(application: KtorCloudApplication) : AccountService {
                     FriendDao.add(record.createUID, record.requestUID)
                 if (!FriendDao.exists(record.requestUID, record.createUID))
                     FriendDao.add(record.requestUID, record.createUID)
+
+                rocketMQProducer.send(
+                    buildMessage(
+                        DYNAMIC_TIMELINE_HANDLE_TOPIC,
+                        JSON.encodeToString<TimelineEvent>(AddFriendEvent(record.createUID, record.requestUID))
+                            .toByteArray(),
+                        messageGroup = "${record.createUID}",
+                        keys = arrayOf(loggedUID.toString())
+                    )
+                )
+
+                rocketMQProducer.send(
+                    buildMessage(
+                        DYNAMIC_TIMELINE_HANDLE_TOPIC,
+                        JSON.encodeToString<TimelineEvent>(AddFriendEvent(record.requestUID, record.createUID))
+                            .toByteArray(),
+                        messageGroup = "${record.requestUID}",
+                        keys = arrayOf(loggedUID.toString())
+                    )
+                )
             }
 
             result.result()

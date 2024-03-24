@@ -68,8 +68,7 @@ fun main() = runBlocking {
         val windowState = rememberWindowState(
             position = WindowPosition.Aligned(Alignment.Center),
             width = 1000.dp,
-//            width = 480.dp,
-            height = 800.dp
+            height = 700.dp
         )
 
         CompositionLocalProvider(LocalKeyEventStore provides KeyEventStore(), LocalWindowState provides windowState) {

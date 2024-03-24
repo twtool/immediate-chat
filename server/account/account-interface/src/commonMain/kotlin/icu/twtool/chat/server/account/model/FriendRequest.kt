@@ -24,7 +24,7 @@ data class FriendRequest(
 
     companion object {
 
-        const val VALID_SECONDS: Long = 7 * 24 * 60 * 60
+        const val VALID_SECONDS: Long = 7 * 24 * 60 * 60 * 1000 // 7 天
     }
 
     fun isValid(): Boolean {

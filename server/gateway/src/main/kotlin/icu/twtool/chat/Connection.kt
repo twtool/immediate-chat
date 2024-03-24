@@ -3,15 +3,14 @@ package icu.twtool.chat
 import io.ktor.server.websocket.DefaultWebSocketServerSession
 import io.ktor.websocket.Frame
 import io.ktor.websocket.close
-import io.ktor.websocket.send
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.slf4j.LoggerFactory
-import java.util.*
 
 const val CONNECTION_TIMEOUT_MS = 1000L * 60L * 5L
 
 class Session(
+    val uid: Long,
     val token: String,
     private val session: DefaultWebSocketServerSession,
 ) : DefaultWebSocketServerSession by session {

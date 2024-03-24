@@ -16,3 +16,7 @@ redis:
 account:
   pwd-secret: 14ajn4@ada
   token-secret: mkw@a21a#
+rocketmq:
+  endpoint: rocketmq.address:8081
+  consumer:
+    group: AccountService

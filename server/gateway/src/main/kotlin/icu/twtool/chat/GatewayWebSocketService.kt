@@ -7,6 +7,8 @@ import icu.twtool.chat.server.chat.vo.MessageVO
 import icu.twtool.chat.server.common.CHAT_WEBSOCKET_PATH
 import icu.twtool.chat.server.gateway.param.WebSocketParam
 import icu.twtool.chat.server.gateway.param.WebSocketParamType
+import icu.twtool.chat.server.gateway.topic.PUSH_MESSAGE_TOPIC
+import icu.twtool.chat.server.gateway.topic.PushMessage
 import icu.twtool.chat.server.gateway.vo.WebSocketVoType
 import icu.twtool.ktor.cloud.JSON
 import icu.twtool.ktor.cloud.KtorCloudApplication
@@ -47,20 +49,36 @@ class GatewayWebSocketService(application: KtorCloudApplication, rocketMQPlugin:
         return result
     }
 
-    private val sendMessageToConsumer = rocketMQPlugin.getPushConsumer(
-        mapOf(SEND_MESSAGE_TO_TOPIC to filterTag()),
+    private val rocketMQConsumer = rocketMQPlugin.getPushConsumer(
+        mapOf(
+            PUSH_MESSAGE_TOPIC to filterTag(),
+            SEND_MESSAGE_TO_TOPIC to filterTag()
+        ),
         group = application.config[GatewayIDKey]
     ) {
         val body = ByteArray(it.body.remaining())
         it.body.get(body)
         val bodyString = String(body)
-        val message = JSON.decodeFromString<MessageVO>(bodyString)
+
         if (log.isDebugEnabled)
-            log.debug("ID: {}, content: {}", it.messageId, bodyString)
-        runBlocking {
-            val addressee = message.addressee
-            send(addressee, WebSocketVoType.Message, body)
+            log.debug("TOPIC: {}, ID: {}, content: {}", it.topic, it.messageId, bodyString)
+        when (it.topic) {
+            PUSH_MESSAGE_TOPIC -> {
+                val message = JSON.decodeFromString<PushMessage>(bodyString)
+                runBlocking {
+                    send(message.uid, WebSocketVoType.Push, body)
+                }
+            }
+
+            SEND_MESSAGE_TO_TOPIC -> {
+                val message = JSON.decodeFromString<MessageVO>(bodyString)
+                runBlocking {
+                    val addressee = message.addressee
+                    send(addressee, WebSocketVoType.Message, body)
+                }
+            }
         }
+
         ConsumeResult.SUCCESS
     }
 
@@ -70,7 +88,10 @@ class GatewayWebSocketService(application: KtorCloudApplication, rocketMQPlugin:
             for (frame in incoming) {
                 log.info("Received message: {}", frame)
                 if (!this.isActive) break
-                if (frame is Frame.Close) break
+                if (frame is Frame.Close) {
+                    session?.uid?.let { connections.remove(it) }
+                    break
+                }
 
                 val body = (frame as? Frame.Text ?: continue).readText()
                 try {
@@ -84,7 +105,7 @@ class GatewayWebSocketService(application: KtorCloudApplication, rocketMQPlugin:
                                 break
                             }
 
-                            session = Session(token, this)
+                            session = Session(loggedUID, token, this)
                             connections.getOrPut(loggedUID) { Connection(loggedUID) }.add(session)
                         }
 
@@ -101,6 +122,6 @@ class GatewayWebSocketService(application: KtorCloudApplication, rocketMQPlugin:
     }
 
     override fun close() {
-        sendMessageToConsumer.close()
+        rocketMQConsumer.close()
     }
 }

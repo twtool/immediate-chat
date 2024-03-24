@@ -24,6 +24,7 @@ object LoggedInState {
     }
 
     fun logout() {
+        WebSocketState.logout()
         this.token = null
     }
 }

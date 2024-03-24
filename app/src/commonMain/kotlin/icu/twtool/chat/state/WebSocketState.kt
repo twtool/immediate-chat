@@ -8,6 +8,8 @@ import icu.twtool.chat.server.common.CHAT_WEBSOCKET_PATH
 import icu.twtool.chat.server.common.datetime.epochSeconds
 import icu.twtool.chat.server.gateway.param.WebSocketParam
 import icu.twtool.chat.server.gateway.param.WebSocketParamType
+import icu.twtool.chat.server.gateway.topic.FriendRequestPushMessage
+import icu.twtool.chat.server.gateway.topic.PushMessage
 import icu.twtool.chat.server.gateway.vo.WebSocketVoType
 import icu.twtool.chat.service.creator
 import icu.twtool.chat.utils.JSON
@@ -82,7 +84,7 @@ object WebSocketState {
             log.error(e.message ?: err)
         }
         connecting = false
-        log.info("reconnect after 5 seconds.")
+        log.info("reconnect after ${retry.coerceAtMost(5)} seconds.")
         if (++retry > 1) delay(retry.coerceAtMost(5) * 1000L)
         reconnect()
     }
@@ -136,6 +138,8 @@ object WebSocketState {
             buffer.get(content)
             val contentStr = String(content)
 
+            log.info("message: $content")
+
             when (type) {
                 WebSocketVoType.Message -> {
                     val message = Json.decodeFromString<MessageVO>(contentStr)
@@ -155,6 +159,14 @@ object WebSocketState {
                         }
                     }
                 }
+
+                WebSocketVoType.Push -> {
+                    when (val message = Json.decodeFromString<PushMessage>(contentStr)) {
+                        is FriendRequestPushMessage -> {
+                            notification?.notify(-100001, message.nickname ?: "未命名用户", message.message)
+                        }
+                    }
+                }
             }
             _updated.emit(WebSocketUpdate(type))
         }
@@ -166,6 +178,15 @@ object WebSocketState {
                 auth(it)
             }
         }
+    }
+
+    fun logout() {
+        session?.let {
+            scope.launch {
+                session?.close()
+            }
+        }
+        session = null
     }
 
     private suspend fun auth(session: ClientWebSocketSession) {

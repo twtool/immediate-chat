@@ -45,4 +45,9 @@ object DynamicDao {
                 Dynamics.deleteWhere { Dynamics.id eq row[Dynamics.id] }
             }.firstOrNull() ?: 0) > 0
     }
+
+    fun selectDynamicIdAndPublishTimeByUID(uid: Long): List<Pair<Long, LocalDateTime>> =
+        Dynamics.select(Dynamics.id, Dynamics.createAt)
+            .where(Dynamics.uid eq uid)
+            .map { it[Dynamics.id].value to it[Dynamics.createAt] }
 }

@@ -13,7 +13,7 @@ import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.update
 
@@ -29,8 +29,8 @@ object FriendRequestDao {
         updateAt = row[FriendRequests.updateAt],
     )
 
-    fun add(createUID: Long, requestUID: Long, msg: String): Boolean =
-        FriendRequests.insert {
+    fun add(createUID: Long, requestUID: Long, msg: String): Long =
+        FriendRequests.insertAndGetId {
             it[FriendRequests.createUID] = createUID
             it[FriendRequests.requestUID] = requestUID
             it[FriendRequests.msg] = msg
@@ -39,7 +39,7 @@ object FriendRequestDao {
             val now = LocalDateTime.nowUTC()
             it[createAt] = now
             it[updateAt] = now
-        }.insertedCount == 1
+        }.value
 
     fun last(createUID: Long, requestUID: Long): FriendRequest? =
         FriendRequests.selectAll().where {
