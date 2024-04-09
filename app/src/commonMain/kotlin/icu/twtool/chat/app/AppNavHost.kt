@@ -29,6 +29,7 @@ import icu.twtool.chat.view.ChatView
 import icu.twtool.chat.view.FriendsView
 import icu.twtool.chat.view.LoginView
 import icu.twtool.chat.view.MessagesView
+import icu.twtool.chat.view.RegisterView
 import icu.twtool.chat.view.ScanCodeView
 
 @Composable
@@ -41,9 +42,26 @@ fun AppNavHost(
 ) {
     NavHost(controller, windowSize, paddingValues) {
         composable(LoginRoute) { _, paddingValues ->
-            LoginView(snackbarHostState, paddingValues) {
-                controller.navigateTo(MessagesRoute)
-            }
+            LoginView(snackbarHostState, paddingValues,
+                onSuccess = {
+                    controller.navigateTo(MessagesRoute)
+                },
+                navigateToRegisterRoute = {
+                    controller.navigateTo(RegisterRoute)
+                }
+            )
+        }
+        composable(RegisterRoute) { _, paddingValues ->
+            RegisterView(
+                snackbarHostState,
+                paddingValues,
+                navigateToLoginRoute = {
+                    controller.navigateTo(LoginRoute)
+                },
+                navigateToHomeRoute = {
+                    controller.navigateTo(MessagesRoute)
+                }
+            )
         }
         composable(MessagesRoute) { state, paddingValues ->
             MessagesView(paddingValues, state.windowSize, navigateToChatRoute = { controller.navigateTo(ChatRoute) })

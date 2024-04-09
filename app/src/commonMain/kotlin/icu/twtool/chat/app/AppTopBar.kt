@@ -55,7 +55,7 @@ fun AppTopBar(controller: NavController, windowSize: ICWindowSizeClass, onClickA
     val currentRoute: NavRoute = controller.current
     val visible by derivedStateOf {
         windowSize.widthSizeClass < ICWindowWidthSizeClass.Expanded &&
-                (currentRoute != LoginRoute)
+                (currentRoute != LoginRoute && currentRoute != RegisterRoute)
     }
 
     val containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(ElevationTokens.Level2)

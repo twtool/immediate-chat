@@ -15,6 +15,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 
 val LoginRoute = NavRoute("Login", true)
+val RegisterRoute = NavRoute("Register", true)
 
 val MessagesRoute = NavRoute("Messages", true)
 

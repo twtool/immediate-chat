@@ -5,12 +5,15 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -18,9 +21,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
@@ -46,15 +51,23 @@ import icu.twtool.chat.server.account.AccountService
 import icu.twtool.chat.server.account.param.LoginParam
 import icu.twtool.chat.service.get
 import icu.twtool.chat.state.LoggedInState
-import icu.twtool.chat.state.WebSocketState
 import icu.twtool.chat.theme.ElevationTokens
+import immediatechat.app.generated.resources.Res
+import immediatechat.app.generated.resources.ic_register
+import immediatechat.app.generated.resources.register_account
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
-fun LoginView(snackbarState: SnackbarHostState, paddingValues: PaddingValues, onSuccess: () -> Unit) {
+fun LoginView(
+    snackbarState: SnackbarHostState,
+    paddingValues: PaddingValues,
+    onSuccess: () -> Unit,
+    navigateToRegisterRoute: () -> Unit
+) {
     LoginContent(
         snackbarState.currentSnackbarData == null,
         onSuccess = {
@@ -63,6 +76,7 @@ fun LoginView(snackbarState: SnackbarHostState, paddingValues: PaddingValues, on
         onError = { msg ->
             snackbarState.showSnackbar(msg, withDismissAction = true, duration = SnackbarDuration.Short)
         },
+        navigateToRegisterRoute = navigateToRegisterRoute,
         Modifier.padding(paddingValues).fillMaxSize()
     )
 }
@@ -72,6 +86,7 @@ fun LoginContent(
     enabled: Boolean = true,
     onSuccess: () -> Unit,
     onError: suspend (String) -> Unit,
+    navigateToRegisterRoute: () -> Unit,
     modifier: Modifier = Modifier.fillMaxSize()
 ) {
     var doLogin by remember { mutableStateOf(false) }
@@ -135,6 +150,28 @@ fun LoginContent(
             enabled = enabled
         ) {
             Text("登录")
+        }
+
+        Spacer(Modifier.requiredHeight(48.dp))
+
+        Row {
+            Column(
+                Modifier.clickable(MutableInteractionSource(), null) {
+                    navigateToRegisterRoute()
+                },
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Icon(
+                    painterResource(Res.drawable.ic_register), "register",
+                    Modifier.border(
+                        1.dp,
+                        MaterialTheme.colorScheme.surfaceColorAtElevation(ElevationTokens.Level1),
+                        CircleShape
+                    ).padding(16.dp).size(16.dp)
+                )
+                Spacer(Modifier.requiredHeight(8.dp))
+                Text(stringResource(Res.string.register_account), style = MaterialTheme.typography.labelMedium)
+            }
         }
     }
 }

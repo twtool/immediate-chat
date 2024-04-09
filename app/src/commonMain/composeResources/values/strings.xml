@@ -4,4 +4,22 @@
 
     <string name="message_channel_name">消息通知</string>
     <string name="message_channel_description">用来发送收到的好友信息的通知渠道</string>
+
+    <string name="agree_continue">同意并继续</string>
+
+    <string name="back_login_view">返回登录页面？</string>
+
+    <string name="confirm">确认</string>
+
+    <string name="input_captcha_and_setup_pwd">输入验证码并设置密码</string>
+    <string name="input_email">输入电子邮箱</string>
+    <string name="input_pwd">输入密码</string>
+    <string name="input_confirm_pwd">重复输入密码</string>
+
+    <string name="please_read_and_agree_protocol">请先阅读并同意服务条款</string>
+    <string name="pwd_inconsistent">密码不一致，请重新输入</string>
+
+    <string name="register_account">注册账号</string>
+    <string name="register_account_and_bind_email">"注册账号并绑定邮箱"</string>
+    <string name="register_and_login">"注册并登录"</string>
 </resources>

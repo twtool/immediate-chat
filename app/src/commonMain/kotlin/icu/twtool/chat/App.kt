@@ -26,6 +26,7 @@ import icu.twtool.chat.app.FriendsRoute
 import icu.twtool.chat.app.LoginRoute
 import icu.twtool.chat.app.MessagesRoute
 import icu.twtool.chat.app.PublishDynamicRoute
+import icu.twtool.chat.app.RegisterRoute
 import icu.twtool.chat.components.file.FileRes
 import icu.twtool.chat.components.file.LookFile
 import icu.twtool.chat.material.ICScaffold
@@ -84,7 +85,7 @@ fun App(
         Row {
             AnimatedVisibility(
                 visible = windowSize.widthSizeClass >= ICWindowWidthSizeClass.Expanded &&
-                        controller.current != LoginRoute
+                        controller.current != LoginRoute && controller.current != RegisterRoute
             ) {
                 AppNavigationRail(
                     snackbarHostState, controller.current, controller,
