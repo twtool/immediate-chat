@@ -52,7 +52,6 @@ class ChatServiceImpl(application: KtorCloudApplication, rocketMQPlugin: RocketM
 
         val minScore = param.lastEpochSeconds.toDouble()
         val maxScore = param.currentEpochSeconds.toDouble()
-        log.info("minScore:$minScore, maxScore:$maxScore")
         return Res.success(redis.zrangeByScore(messageKey, minScore, maxScore).map {
             JSON.decodeFromString<MessageVO>(it)
         })

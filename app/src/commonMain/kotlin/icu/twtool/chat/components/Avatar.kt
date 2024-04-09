@@ -26,7 +26,7 @@ fun Avatar(
     shape: Shape = MaterialTheme.shapes.extraSmall,
     onClick: (() -> Unit)? = null
 ) {
-    val painter by produceImageState(url)
+    val painter by produceImageState(url, keys = arrayOf(url))
     ICAsyncImage(
         painter,
         "Avatar",

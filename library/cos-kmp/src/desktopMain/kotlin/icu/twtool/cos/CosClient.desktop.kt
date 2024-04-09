@@ -30,11 +30,13 @@ object DesktopCosClient : CosClient {
         client.shutdown()
     }
 
-    override fun putObject(key: String, input: InputStream, metadata: CommonObjectMetadata): String {
+    override fun putObject(key: String, input: InputStream, metadata: CommonObjectMetadata): String? {
         val request = PutObjectRequest(config.bucket, key, input, metadata.toObjectMetadata())
 
-        client.putObject(request)
-        return key
+        if (runCatching {
+                client.putObject(request)
+            }.isSuccess) return key
+        return null
     }
 
     override fun getObject(key: String, queryParameter: String?): InputStream? {

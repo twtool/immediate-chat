@@ -79,7 +79,7 @@ fun main() = runBlocking {
                 title = stringResource(Res.string.app_name),
                 icon = painterResource("drawable/logo.xml"),
                 transparent = true, undecorated = true,
-                onPreviewKeyEvent = on@{
+                onKeyEvent = on@{
                     for (handler in store.get()) {
                         if (handler(it)) return@on true
                     }

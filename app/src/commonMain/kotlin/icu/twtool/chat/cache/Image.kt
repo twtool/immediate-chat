@@ -11,10 +11,13 @@ import icu.twtool.chat.service.creator
 import icu.twtool.cos.getCosClient
 import icu.twtool.image.compose.encodedToImageBitmap
 import icu.twtool.image.compose.urlByteArray
+import icu.twtool.logger.getLogger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
+
+private val log = getLogger("icu.twtool.chat.cache.Image.Kt")
 
 private val imageMemoryCache = LruCache<String, Painter>(20)
 
@@ -29,6 +32,10 @@ suspend fun loadImage(url: String?, cacheable: Boolean = true, queryParameter: S
         ?: (runCatching {
             if (url.matches(HTTP_URL_REGEX)) creator.client.urlByteArray(url)
             else getCosClient().getObject(url, queryParameter)?.readBytes()
+        }.apply {
+            if (isFailure) {
+                log.error(exceptionOrNull()?.message ?: "error", exceptionOrNull())
+            }
         }.getOrNull()?.apply {
             if (cacheable) cache[key] = this
         })

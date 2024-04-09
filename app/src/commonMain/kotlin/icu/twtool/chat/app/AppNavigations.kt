@@ -1,5 +1,6 @@
 package icu.twtool.chat.app
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
@@ -38,13 +39,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.Popup
+import icu.twtool.chat.cache.produceImageState
 import icu.twtool.chat.components.AccountInfoCard
 import icu.twtool.chat.components.Avatar
 import icu.twtool.chat.components.WindowDialog
@@ -64,6 +65,16 @@ import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.vectorResource
 
 @Composable
+private fun NavigationBarAvatar(onClick: () -> Unit) {
+    val painter by produceImageState(LoggedInState.info?.avatarUrl, keys = arrayOf(LoggedInState.info))
+    Avatar(
+        painter, 38.dp,
+        MaterialTheme.shapes.small,
+        modifier = Modifier.clickable { onClick() }
+    )
+}
+
+@Composable
 fun AppNavigationRail(
     snackbarHostState: SnackbarHostState,
     currentRoute: NavRoute,
@@ -78,9 +89,8 @@ fun AppNavigationRail(
         val scope = rememberCoroutineScope()
         var showInfo by remember { mutableStateOf(false) }
         var showChangeAccountInfoDialog by remember { mutableStateOf(false) }
-        Avatar(LoggedInState.info?.avatarUrl, 38.dp, MaterialTheme.shapes.small) {
-            showInfo = true
-        }
+
+        NavigationBarAvatar { showInfo = true }
 
         Spacer(Modifier.requiredHeight(16.dp))
 
