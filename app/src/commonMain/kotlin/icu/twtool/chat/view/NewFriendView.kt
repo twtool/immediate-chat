@@ -136,8 +136,9 @@ fun NewFriendView(
         items(state.friendRequestList, { it.id }) {
             FriendRequestItem(it, Modifier.animateItemPlacement(), expireSecond,
                 onClick = {
-                    AccountInfoRoute.info = it.info
-                    navigateTo(AccountInfoRoute)
+                    AccountInfoRoute.open(it.info) {
+                        navigateTo(AccountInfoRoute)
+                    }
                 }
             ) {
                 AcceptFriendRequestRoute.request = it

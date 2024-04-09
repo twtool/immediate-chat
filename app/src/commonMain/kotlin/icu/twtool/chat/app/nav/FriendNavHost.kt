@@ -22,14 +22,26 @@ fun NavHostBuilder.friendComposition(
     onLook: (FileRes) -> Unit
 ) {
     composable(FriendsRoute) { state, paddingValues ->
-        FriendsView(snackbarHostState, state.windowSize, paddingValues, controller::navigateTo)
+        FriendsView(snackbarHostState, state.windowSize, paddingValues,
+            navigateToNewFriendRoute = {
+                controller.navigateTo(NewFriendRoute)
+            },
+            navigateToAccountInfoRoute = {
+                controller.navigateTo(AccountInfoRoute)
+            }
+        )
     }
     composable(listOf(FriendsRoute, AddFriendRoute), ICWindowWidthSizeClass.Expanded) { state, paddingValues ->
         TwoPanel(
             {
-                FriendsView(snackbarHostState, state.windowSize, paddingValues) {
-                    controller.navigateTo(it, listOf(FriendsRoute))
-                }
+                FriendsView(snackbarHostState, state.windowSize, paddingValues,
+                    navigateToNewFriendRoute = {
+                        controller.navigateTo(NewFriendRoute, listOf(FriendsRoute))
+                    },
+                    navigateToAccountInfoRoute = {
+                        controller.navigateTo(AccountInfoRoute, listOf(FriendsRoute))
+                    }
+                )
             },
             {
                 AddFriendView(
@@ -56,9 +68,14 @@ fun NavHostBuilder.friendComposition(
     composable(NewFriendRoute, ICWindowWidthSizeClass.Expanded) { state, paddingValues ->
         TwoPanel(
             {
-                FriendsView(snackbarHostState, state.windowSize, paddingValues) {
-                    controller.navigateTo(it, listOf(FriendsRoute))
-                }
+                FriendsView(snackbarHostState, state.windowSize, paddingValues,
+                    navigateToNewFriendRoute = {
+                        controller.navigateTo(NewFriendRoute, listOf(FriendsRoute))
+                    },
+                    navigateToAccountInfoRoute = {
+                        controller.navigateTo(AccountInfoRoute, listOf(FriendsRoute))
+                    }
+                )
             },
             {
                 NewFriendView(snackbarHostState, paddingValues) {

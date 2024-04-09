@@ -11,4 +11,6 @@ open class NavRoute(
 ) {
 
     open fun onPop() {}
+
+    open fun clear() {}
 }

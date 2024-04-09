@@ -12,4 +12,6 @@ data class MessageVO(
     val originAddressee: MessageAddressee, // 用户 UID 或者频道 CID（字符串）
     val content: MessageContent,
     val createTime: LocalDateTime,
+
+    val id: Long = -1
 )

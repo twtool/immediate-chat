@@ -20,7 +20,17 @@ class NavController(initial: NavRoute) {
     private val stack = mutableListOf<NavRoute>()
 
     fun navigateTo(route: NavRoute, customStack: List<NavRoute>? = null) {
-        if (current == route) return
+        if (current == route) {
+            if (customStack != null) {
+                current.clear()
+                stack.removeAll {
+                    it.onPop()
+                    true
+                }
+                stack.addAll(customStack)
+            }
+            return
+        }
         if (customStack != null) {
             stack.removeAll {
                 it.onPop()

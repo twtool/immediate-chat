@@ -45,7 +45,6 @@ import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.movableContentOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -84,7 +83,6 @@ import icu.twtool.chat.state.ChatMessageItem
 import icu.twtool.chat.state.ChatViewState
 import icu.twtool.chat.state.LoggedInState
 import icu.twtool.chat.theme.ElevationTokens
-import icu.twtool.chat.utils.formatLocal
 import icu.twtool.chat.utils.onEnterKeyPressed
 import icu.twtool.chat.utils.rememberFileChooser
 import icu.twtool.cos.CommonObjectMetadata
@@ -189,6 +187,48 @@ fun ChatView(
 }
 
 @Composable
+private fun ChatItemAvatar(
+    item: ChatMessageItem, widthSizeClass: ICWindowWidthSizeClass,
+    onLookInfo: (AccountInfo) -> Unit,
+    navigateChatRoute: (AccountInfo) -> Unit
+) {
+    val info by produceState<AccountInfo?>(null, item) {
+        value = if (item.me) LoggedInState.info else loadAccountInfo(item.message.sender)
+    }
+
+    val showPopup = remember { mutableStateOf(false) }
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Avatar(info?.avatarUrl, 42.dp) {
+            if (widthSizeClass == ICWindowWidthSizeClass.Expanded) showPopup.value = true
+            else info?.let(onLookInfo)
+        }
+        Text(
+            item.createTimeFormat,
+            style = MaterialTheme.typography.labelSmall
+        )
+        if (showPopup.value) info?.let {
+            AccountInfoCardPopup(
+                it,
+                onDismissRequest = { showPopup.value = false },
+                onLookInfoClick = {
+                    showPopup.value = false
+                    onLookInfo(it)
+                },
+                onSendClick = {
+                    showPopup.value = false
+                    navigateChatRoute(it)
+                },
+                DpOffset(if (item.me) (-52).dp else 52.dp, 0.dp),
+                if (item.me) Alignment.TopEnd else Alignment.TopStart,
+                showOpenChat = false
+//                        showOpenChat = item.me
+            )
+        }
+    }
+}
+
+@Composable
 fun ChatViewMessageItem(
     widthSizeClass: ICWindowWidthSizeClass,
     item: ChatMessageItem,
@@ -196,61 +236,21 @@ fun ChatViewMessageItem(
     onLookFile: (FileRes) -> Unit,
     navigateChatRoute: (AccountInfo?) -> Unit
 ) {
-    val info by produceState<AccountInfo?>(null) {
-        value = if (item.me) LoggedInState.info else loadAccountInfo(item.message.sender)
-    }
 
-    val showPopup = remember { mutableStateOf(false) }
-
-    val placeholder = remember {
-        movableContentOf {
-            Box(Modifier.size(42.dp))
-        }
-    }
-    val avatar = remember(info) {
-        movableContentOf {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Avatar(info?.avatarUrl, 42.dp) {
-                    if (widthSizeClass == ICWindowWidthSizeClass.Expanded) showPopup.value = true
-                    else onLookInfo(info)
-                }
-                Text(
-                    item.message.createTime.formatLocal(),
-                    style = MaterialTheme.typography.labelSmall
-                )
-                if (showPopup.value) info?.let {
-                    AccountInfoCardPopup(
-                        it,
-                        onDismissRequest = { showPopup.value = false },
-                        onLookInfoClick = {
-                            showPopup.value = false
-                            onLookInfo(info)
-                        },
-                        onSendClick = {
-                            showPopup.value = false
-                            navigateChatRoute(info)
-                        },
-                        DpOffset(if (item.me) (-52).dp else 52.dp, 0.dp),
-                        if (item.me) Alignment.TopEnd else Alignment.TopStart,
-                        showOpenChat = false
-//                        showOpenChat = item.me
-                    )
-                }
-            }
-        }
-    }
     Row(
         Modifier.fillMaxWidth().padding(top = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        if (item.me) placeholder() else avatar()
+        if (item.me) Box(Modifier.size(42.dp))
+        else ChatItemAvatar(item, widthSizeClass, onLookInfo, navigateChatRoute)
         Row(
             Modifier.weight(1f),
             horizontalArrangement = if (item.me) Arrangement.End else Arrangement.Start
         ) {
             RenderMessageContent(item.message.content, onLookFile = onLookFile)
         }
-        if (item.me) avatar() else placeholder()
+        if (item.me) ChatItemAvatar(item, widthSizeClass, onLookInfo, navigateChatRoute)
+        else Box(Modifier.size(42.dp))
     }
 }
 
@@ -336,8 +336,11 @@ fun ChatViewMessages(
                 onLookInfo = {
                     if (widthSizeClass == ICWindowWidthSizeClass.Expanded && item.me) showChangeAccountInfoDialog = true
                     else {
-                        AccountInfoRoute.info = it
-                        navigateAccountInfoRoute()
+                        it?.let { info ->
+                            AccountInfoRoute.open(info) {
+                                navigateAccountInfoRoute()
+                            }
+                        }
                     }
                 },
                 onLookFile = onLookFile,

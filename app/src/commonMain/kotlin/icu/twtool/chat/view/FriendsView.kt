@@ -46,10 +46,8 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import icu.twtool.chat.app.AccountInfoRoute
-import icu.twtool.chat.app.NewFriendRoute
 import icu.twtool.chat.components.Avatar
 import icu.twtool.chat.components.ICCircularProgressIndicator
-import icu.twtool.chat.navigation.NavRoute
 import icu.twtool.chat.navigation.window.ICWindowSizeClass
 import icu.twtool.chat.navigation.window.ICWindowWidthSizeClass
 import icu.twtool.chat.state.FriendsViewState
@@ -95,7 +93,8 @@ fun FriendsView(
     snackbarHostState: SnackbarHostState,
     windowSize: ICWindowSizeClass,
     paddingValues: PaddingValues,
-    navigateTo: (NavRoute) -> Unit
+    navigateToNewFriendRoute: () -> Unit,
+    navigateToAccountInfoRoute: () -> Unit,
 ) {
     val state = remember { FriendsViewState() }
     val avatarModifier = Modifier.clip(MaterialTheme.shapes.extraSmall).size(42.dp)
@@ -167,7 +166,7 @@ fun FriendsView(
                     .offset(y = with(LocalDensity.current) { refreshState.verticalOffset.toDp() })
             ) {
                 item {
-                    FriendListItem("好友验证", { navigateTo(NewFriendRoute) }) {
+                    FriendListItem("好友验证", { navigateToNewFriendRoute() }) {
                         InternalAvatar(
                             Res.drawable.ic_friend, "好友验证", avatarModifier,
                             MaterialTheme.colorScheme.secondaryContainer,
@@ -187,8 +186,9 @@ fun FriendsView(
 
                 items(filterItems.value, { it.uid }) {
                     FriendListItem(it.nickname ?: "未命名用户", {
-                        AccountInfoRoute.info = it
-                        navigateTo(AccountInfoRoute)
+                        AccountInfoRoute.open(it) {
+                            navigateToAccountInfoRoute()
+                        }
                     }) {
                         Avatar(it.avatarUrl, 42.dp)
                     }

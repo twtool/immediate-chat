@@ -62,9 +62,7 @@ fun AppNavHost(
                         paddingValues,
                         onBack = { controller.pop() },
                         onLookFile = onLook,
-                        navigateToChatSettingsRoute = {
-                            // TODO
-                        },
+                        navigateToChatSettingsRoute = {},
                         navigateChatRoute = { controller.navigateTo(ChatRoute, listOf(MessagesRoute)) },
                         navigateAccountInfoRoute = { controller.navigateTo(AccountInfoRoute, listOf(FriendsRoute)) }
                     )
@@ -76,7 +74,7 @@ fun AppNavHost(
                 state.windowSize.widthSizeClass, paddingValues, onBack = { controller.pop() },
                 onLookFile = onLook,
                 navigateToChatSettingsRoute = {
-                    // TODO
+                    controller.navigateTo(ChatSettingsRoute)
                 },
                 navigateChatRoute = { controller.navigateTo(ChatRoute) },
                 navigateAccountInfoRoute = { controller.navigateTo(AccountInfoRoute) }
@@ -96,7 +94,8 @@ fun AppNavHost(
                         paddingValues,
                         onBack = { controller.pop() },
                         onLookFile = onLook,
-                        navigateToChatSettingsRoute = {},
+                        navigateToChatSettingsRoute = {
+                        },
                         navigateChatRoute = { controller.navigateTo(ChatRoute, listOf(MessagesRoute)) },
                         navigateAccountInfoRoute = { controller.navigateTo(AccountInfoRoute, listOf(FriendsRoute)) }
                     )
@@ -114,9 +113,15 @@ fun AppNavHost(
         composable(AcceptFriendRequestRoute, ICWindowWidthSizeClass.Expanded) { state, paddingValues ->
             TwoPanel(
                 {
-                    FriendsView(snackbarHostState, state.windowSize, paddingValues) {
-                        controller.navigateTo(it, listOf(FriendsRoute))
-                    }
+                    FriendsView(
+                        snackbarHostState, state.windowSize, paddingValues,
+                        navigateToNewFriendRoute = {
+                            controller.navigateTo(NewFriendRoute, listOf(FriendsRoute))
+                        },
+                        navigateToAccountInfoRoute = {
+                            controller.navigateTo(AccountInfoRoute, listOf(FriendsRoute))
+                        }
+                    )
                 },
                 { AcceptFriendRequestView(snackbarHostState, paddingValues, onBack = { controller.pop() }) }
             )
@@ -131,9 +136,15 @@ fun AppNavHost(
         composable(AccountInfoRoute, ICWindowWidthSizeClass.Expanded) { state, paddingValues ->
             TwoPanel(
                 {
-                    FriendsView(snackbarHostState, state.windowSize, paddingValues) {
-                        controller.navigateTo(it, listOf(FriendsRoute))
-                    }
+                    FriendsView(
+                        snackbarHostState, state.windowSize, paddingValues,
+                        navigateToNewFriendRoute = {
+                            controller.navigateTo(NewFriendRoute, listOf(FriendsRoute))
+                        },
+                        navigateToAccountInfoRoute = {
+                            controller.navigateTo(AccountInfoRoute, listOf(FriendsRoute))
+                        }
+                    )
                 },
                 {
                     AccountInfoView(

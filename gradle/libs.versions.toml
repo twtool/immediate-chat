@@ -13,6 +13,7 @@ accompanist = "0.34.0"
 camerax = "1.3.2"
 compose = "1.6.1"
 compose-compiler = "1.5.10"
+compose-tracing = "1.0.0-beta01"
 compose-plugin = "1.6.1" # https://github.com/JetBrains/compose-multiplatform/releases
 exposed = "0.47.0"
 jackson = "2.17.0"
@@ -21,9 +22,9 @@ kotlinx-io = "0.3.1"
 kotlinx-serialization-json = "1.6.2"
 kotlinx-datetime = "0.6.0-RC.2"
 ksp = "1.9.23-1.0.19"
-ktor = "2.3.8"
+ktor = "2.3.9"
 ktor-cloud = "1.0.0-SNAPSHOT"
-logback = "1.4.14"
+logback = "1.5.3"
 mlkit-barcode-scaning = "17.2.0"
 mmkv = "1.3.3"
 mmkv-jvm = "1.0-SNAPSHOT"
@@ -32,7 +33,7 @@ qcloud-cos-sts-api = "3.1.1"
 qcloud-cos-android = "5.9.24"
 qcloud-cos-java = "5.6.205"
 shadow = "8.1.1"
-slf4j-api = "2.0.11"
+slf4j-api = "2.0.12"
 snakeyaml = "2.2"
 sqldelight = "2.0.1"
 startup-runtime = "1.1.1"
@@ -47,6 +48,8 @@ accompanist-permissions = { module = "com.google.accompanist:accompanist-permiss
 
 camera-camera2 = { group = "androidx.camera", name = "camera-camera2", version.ref = "camerax" }
 camera-view = { group = "androidx.camera", name = "camera-view", version.ref = "camerax" }
+
+compose-runtime-tracing = { group = "androidx.compose.runtime", name = "runtime-tracing", version.ref = "compose-tracing" }
 
 exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
 exposed-dao = { module = "org.jetbrains.exposed:exposed-dao", version.ref = "exposed" }
@@ -72,6 +75,7 @@ ktor-cloud-client-service = { module = "icu.twtool.ktor.cloud:client-service", v
 ktor-cloud-discovery-polaris = { module = "icu.twtool.ktor.cloud:discovery-polaris", version.ref = "ktor-cloud" }
 ktor-cloud-exposed = { module = "icu.twtool.ktor.cloud:exposed", version.ref = "ktor-cloud" }
 ktor-cloud-redis = { module = "icu.twtool.ktor.cloud:redis", version.ref = "ktor-cloud" }
+ktor-cloud-opentelemetry = { module = "icu.twtool.ktor.cloud:opentelemetry", version.ref = "ktor-cloud" }
 ktor-cloud-plugin-rocketmq = { module = "icu.twtool.ktor.cloud:plugin-rocketmq", version.ref = "ktor-cloud" }
 ktor-cloud-http-core = { module = "icu.twtool.ktor.cloud:http-core", version.ref = "ktor-cloud" }
 ktor-cloud-http-ksp = { module = "icu.twtool.ktor.cloud:http-ksp", version.ref = "ktor-cloud" }

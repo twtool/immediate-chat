@@ -17,3 +17,5 @@ rocketmq:
   endpoint: rocketmq.address:8081
   consumer:
     group: ChatService
+opentelemetry:
+  endpoint: http://opentelemetry.address:4317

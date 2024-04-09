@@ -11,6 +11,7 @@ import icu.twtool.chat.server.dynamic.DynamicService
 import icu.twtool.ktor.cloud.KtorCloudApplication
 import icu.twtool.ktor.cloud.client.service.ServiceCreator
 import icu.twtool.ktor.cloud.discovery.polaris.PolarisRegistry
+import icu.twtool.ktor.cloud.opentelemetry.OpenTelemetryPlugin
 import icu.twtool.ktor.cloud.plugin.rocketmq.RocketMQPlugin
 import icu.twtool.ktor.cloud.route.gateway.exception.NotAllowedAcceptInternalException
 import icu.twtool.ktor.cloud.route.gateway.route
@@ -32,6 +33,9 @@ fun main() {
         }
     ) {
         install(PolarisRegistry())
+
+        OpenTelemetryPlugin.install()
+
         install(ServiceCreator(listOf(AccountService::create)))
 
         val rocketMQPlugin = RocketMQPlugin()

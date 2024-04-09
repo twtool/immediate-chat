@@ -74,7 +74,7 @@ fun AppTopBar(controller: NavController, windowSize: ICWindowSizeClass, onClickA
                 MessagesRoute, FriendsRoute, DynamicRoute -> TopBarState.LoggedInAccount
                 NewFriendRoute -> TopBarState.NewFriend
                 AcceptFriendRequestRoute -> TopBarState.AcceptFriendRequest
-                ChatSettingsRoute, ChangeAccountInfoRoute -> TopBarState.Title
+                ChatSettingsRoute, ChangeAccountInfoRoute, ChatSettingsRoute -> TopBarState.Title
                 else -> TopBarState.None
             }
         }

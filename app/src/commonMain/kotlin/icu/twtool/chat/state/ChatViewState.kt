@@ -16,6 +16,7 @@ import icu.twtool.chat.server.common.datetime.nowUTC
 import icu.twtool.chat.server.gateway.vo.WebSocketVoType
 import icu.twtool.chat.service.get
 import icu.twtool.chat.utils.JSON
+import icu.twtool.chat.utils.formatLocal
 import icu.twtool.chat.utils.tryLockRun
 import icu.twtool.logger.getLogger
 import kotlinx.coroutines.CoroutineScope
@@ -32,7 +33,8 @@ import kotlin.math.max
 data class ChatMessageItem(
     val id: Long,
     val me: Boolean,
-    val message: MessageVO
+    val message: MessageVO,
+    val createTimeFormat: String
 ) {
 
     companion object {
@@ -41,7 +43,8 @@ data class ChatMessageItem(
             return ChatMessageItem(
                 id,
                 loggedUID == messageVO.sender,
-                messageVO
+                messageVO,
+                createTimeFormat = messageVO.createTime.formatLocal()
             )
         }
     }
@@ -70,7 +73,6 @@ class ChatViewState(scope: CoroutineScope, private val friendUID: Long) {
 
     private fun selectNow(limit: Long? = null) {
         val loggedUID = LoggedInState.info?.uid ?: return
-        log.info("selectNow: $this")
         val mapper = { id: Long, lu: Long, _: Long, message: String, _: Long, _: Long ->
             lastMessageID = max(lastMessageID, id)
             ChatMessageItem.from(id, lu, JSON.decodeFromString(message))
@@ -82,7 +84,9 @@ class ChatViewState(scope: CoroutineScope, private val friendUID: Long) {
             }
             .executeAsList()
 
-        messages.addAll(0, items)
+        if (items.isNotEmpty()) {
+            messages.addAll(0, items)
+        }
     }
 
     init {

@@ -115,25 +115,51 @@ android {
 
     buildFeatures {
         buildConfig = true
+        compose = true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion = libs.versions.compose.compiler.get()
     }
 
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("immediate-chat")
             isMinifyEnabled = false
+        }
+        debug {
+            signingConfig = signingConfigs.getByName("immediate-chat")
+        }
+    }
+
+    flavorDimensions.add("default")
+
+    productFlavors {
+        create("public") {
+            dimension = "default"
+
             buildConfigField("String", "SERVER_PROTOCOL", "\"https\"")
             buildConfigField("String", "SERVER_WEBSOCKET_PROTOCOL", "\"wss\"")
             buildConfigField("String", "SERVER_HOST", "\"ic.twtool.icu\"")
             buildConfigField("Integer", "SERVER_PORT", "443")
         }
-        debug {
-            signingConfig = signingConfigs.getByName("immediate-chat")
+        create("emulator") {
+            dimension = "default"
+
             buildConfigField("String", "SERVER_WEBSOCKET_PROTOCOL", "\"ws\"")
             buildConfigField("String", "SERVER_PROTOCOL", "\"http\"")
             buildConfigField("String", "SERVER_HOST", "\"10.0.2.2\"")
             buildConfigField("Integer", "SERVER_PORT", "20000")
         }
+        create("internal") {
+            dimension = "default"
+
+            buildConfigField("String", "SERVER_WEBSOCKET_PROTOCOL", "\"wss\"")
+            buildConfigField("String", "SERVER_PROTOCOL", "\"https\"")
+            buildConfigField("String", "SERVER_HOST", "\"stun.twtool.icu\"")
+            buildConfigField("Integer", "SERVER_PORT", "443")
+        }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11

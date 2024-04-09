@@ -22,6 +22,7 @@ dependencies {
     implementation(libs.ktor.cloud.application)
     implementation(libs.ktor.cloud.discovery.polaris)
     implementation(libs.ktor.cloud.route.gateway)
+    implementation(libs.ktor.cloud.opentelemetry)
     implementation(libs.ktor.cloud.client.service)
     implementation(libs.ktor.cloud.route.websocket)
     implementation(libs.ktor.cloud.plugin.rocketmq)

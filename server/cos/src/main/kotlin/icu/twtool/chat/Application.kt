@@ -5,6 +5,7 @@ import icu.twtool.chat.server.common.BizException
 import icu.twtool.chat.server.common.Res
 import icu.twtool.ktor.cloud.KtorCloudApplication
 import icu.twtool.ktor.cloud.discovery.polaris.PolarisRegistry
+import icu.twtool.ktor.cloud.opentelemetry.OpenTelemetryPlugin
 import io.ktor.server.netty.Netty
 import org.slf4j.LoggerFactory
 
@@ -21,6 +22,7 @@ fun main() {
         }
     ) {
         install(PolarisRegistry())
+        OpenTelemetryPlugin.install()
 
         installTokenInterceptor()
 

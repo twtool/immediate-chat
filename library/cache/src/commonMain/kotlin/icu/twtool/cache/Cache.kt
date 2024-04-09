@@ -19,6 +19,7 @@ interface Cache {
 
     fun getInt(key: String): Int
     fun getLong(key: String): Long
+    fun getLong(key: String, defaultValue: Long): Long
     fun getFloat(key: String): Float
     fun getDouble(key: String): Double
     fun getBoolean(key: String): Boolean

@@ -5,6 +5,7 @@ import icu.twtool.chat.server.account.param.AuthParam
 import icu.twtool.chat.server.chat.constants.SEND_MESSAGE_TO_TOPIC
 import icu.twtool.chat.server.chat.vo.MessageVO
 import icu.twtool.chat.server.common.CHAT_WEBSOCKET_PATH
+import icu.twtool.chat.server.common.datetime.currentEpochSeconds
 import icu.twtool.chat.server.gateway.param.WebSocketParam
 import icu.twtool.chat.server.gateway.param.WebSocketParamType
 import icu.twtool.chat.server.gateway.topic.PUSH_MESSAGE_TOPIC
@@ -39,10 +40,21 @@ class GatewayWebSocketService(application: KtorCloudApplication, rocketMQPlugin:
     private val accountService by lazy { application.getService<AccountService>() }
 
     private suspend fun send(addressee: Long, type: WebSocketVoType, content: ByteArray): Boolean {
+        return send(addressee, type, content.size) {
+            put(content)
+        }
+    }
+
+    private suspend fun send(
+        addressee: Long,
+        type: WebSocketVoType,
+        extendSize: Int,
+        builder: ByteBuffer.() -> Unit
+    ): Boolean {
         val connection = connections[addressee] ?: return false
 
-        val buffer = ByteBuffer.allocate(Int.SIZE_BYTES + content.size)
-        buffer.putInt(type.ordinal).put(content)
+        val buffer = ByteBuffer.allocate(Int.SIZE_BYTES + extendSize)
+        buffer.putInt(type.ordinal).builder()
         buffer.flip()
         val result = connection.send(Frame.Binary(true, buffer))
         if (!result) connections.remove(addressee, connection)
@@ -107,6 +119,9 @@ class GatewayWebSocketService(application: KtorCloudApplication, rocketMQPlugin:
 
                             session = Session(loggedUID, token, this)
                             connections.getOrPut(loggedUID) { Connection(loggedUID) }.add(session)
+                            send(loggedUID, WebSocketVoType.AuthSuccess, Long.SIZE_BITS) {
+                                putLong(currentEpochSeconds())
+                            }
                         }
 
                         WebSocketParamType.HEARTBEAT -> {

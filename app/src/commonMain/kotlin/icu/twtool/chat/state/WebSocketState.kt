@@ -1,8 +1,11 @@
 package icu.twtool.chat.state
 
 import androidx.compose.runtime.mutableStateOf
+import icu.twtool.cache.getCache
 import icu.twtool.chat.cache.loadAccountInfo
 import icu.twtool.chat.database.database
+import icu.twtool.chat.server.chat.ChatService
+import icu.twtool.chat.server.chat.param.GetMessageRecordParam
 import icu.twtool.chat.server.chat.vo.MessageVO
 import icu.twtool.chat.server.common.CHAT_WEBSOCKET_PATH
 import icu.twtool.chat.server.common.datetime.epochSeconds
@@ -12,6 +15,7 @@ import icu.twtool.chat.server.gateway.topic.FriendRequestPushMessage
 import icu.twtool.chat.server.gateway.topic.PushMessage
 import icu.twtool.chat.server.gateway.vo.WebSocketVoType
 import icu.twtool.chat.service.creator
+import icu.twtool.chat.service.get
 import icu.twtool.chat.utils.JSON
 import icu.twtool.chat.utils.Notification
 import icu.twtool.ktor.cloud.client.kmp.websocket.websocket
@@ -29,10 +33,13 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonPrimitive
+import kotlin.math.max
 
 const val CONNECTION_TIMEOUT_MS = 1000L * 60L * 5L - 5000L
 
@@ -60,19 +67,33 @@ object WebSocketState {
     val updated: StateFlow<WebSocketUpdate> = _updated
 
     private var session: DefaultClientWebSocketSession? = null
-    private val supervisorJob = SupervisorJob()
-    private val scope = CoroutineScope(supervisorJob + Dispatchers.IO)
+    private lateinit var supervisorJob: Job
+    private lateinit var scope: CoroutineScope
     private var heartbeatJob: Job? = null
     private var retry: Int = 0
 
+    private val cache = getCache()
+    private val lastMessageEpochSecondsKey: String get() = "last.message.epoch-seconds:${LoggedInState.info?.uid}"
+    private val lastMessageIdKey: String get() = "last.message.id:${LoggedInState.info?.uid}"
+
+    private var started = false
+    private val startMutex = Mutex()
+
     fun start() {
+        if (started) return
+        started = true
+        supervisorJob = SupervisorJob()
+        scope = CoroutineScope(supervisorJob + Dispatchers.IO)
         scope.launch {
-            reconnect()
+            startMutex.withLock {
+                reconnect()
+            }
         }
     }
 
     fun destroy() {
         supervisorJob.cancel()
+        started = false
     }
 
     private suspend fun reconnect() {
@@ -81,7 +102,7 @@ object WebSocketState {
         } catch (e: Exception) {
             val err = "网络错误，请检查网络连接"
             error.value = err
-            log.error(e.message ?: err)
+            log.error(e.message ?: err, e)
         }
         connecting = false
         log.info("reconnect after ${retry.coerceAtMost(5)} seconds.")
@@ -103,7 +124,7 @@ object WebSocketState {
         if (session != null) return session
         val err = "网络错误，请检查网络连接"
         error.value = err
-        log.error(result.exceptionOrNull()?.message ?: err)
+        log.error(result.exceptionOrNull()?.message ?: err, result.exceptionOrNull())
         delay(retry * 1500 + 500)
         return getSession(retry + 1)
     }
@@ -134,17 +155,54 @@ object WebSocketState {
 
             val type = WebSocketVoType.entries[buffer.getInt()]
 
-            val content = ByteArray(buffer.remaining())
-            buffer.get(content)
-            val contentStr = String(content)
-
-            log.info("message: $content")
-
             when (type) {
+                WebSocketVoType.AuthSuccess -> {
+                    val authSuccessEpochSeconds = buffer.getLong()
+                    val res = ChatService.get().getMessageRecord(
+                        GetMessageRecordParam(
+                            cache.getLong(lastMessageEpochSecondsKey, 0),
+                            authSuccessEpochSeconds
+                        )
+                    )
+                    if (res.success) {
+                        res.data?.fold(0L) { acc, it ->
+                            val createTime = it.createTime.epochSeconds()
+                            if (it.id > cache.getLong(lastMessageIdKey)) {
+                                database.messageDetailsQueries.insertOne(
+                                    it.addressee,
+                                    it.sender,
+                                    JSON.encodeToString(it),
+                                    createTime,
+                                    createTime,
+                                )
+                                database.messageQueries.updateLastMessageId(it.addressee, it.sender)
+                            }
+                            max(acc, it.id)
+                        }?.let {
+                            cache[lastMessageIdKey] = max(cache.getLong(lastMessageIdKey), it)
+                        }
+
+                        res.data?.size?.let {
+                            if (it > 0) {
+                                _updated.emit(WebSocketUpdate(WebSocketVoType.Message))
+                            }
+                        }
+
+                    }
+
+                    continue
+                }
+
                 WebSocketVoType.Message -> {
+                    val content = ByteArray(buffer.remaining())
+                    buffer.get(content)
+                    val contentStr = String(content)
+
                     val message = Json.decodeFromString<MessageVO>(contentStr)
                     val addressee = message.addressee
                     val time = message.createTime.epochSeconds()
+                    cache[lastMessageEpochSecondsKey] = time
+                    cache[lastMessageIdKey] = max(cache.getLong(lastMessageIdKey), message.id)
                     database.messageDetailsQueries.insertOne(
                         addressee,
                         message.sender,
@@ -161,6 +219,10 @@ object WebSocketState {
                 }
 
                 WebSocketVoType.Push -> {
+                    val content = ByteArray(buffer.remaining())
+                    buffer.get(content)
+                    val contentStr = String(content)
+
                     when (val message = Json.decodeFromString<PushMessage>(contentStr)) {
                         is FriendRequestPushMessage -> {
                             notification?.notify(-100001, message.nickname ?: "未命名用户", message.message)

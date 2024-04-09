@@ -41,7 +41,7 @@ fun updateAccountInfo(info: AccountInfo, cache: Cache = getCache(), key: String 
 }
 
 @Composable
-fun produceAccountInfoState(info: AccountInfo, cacheable: Boolean = false) = produceState(info) {
+fun produceAccountInfoState(info: AccountInfo, cacheable: Boolean = false) = produceState(info, info.uid) {
     val res = AccountService.get().getInfoByUID(info.uid.toString())
     if (res.success) value = res.data!!.apply {
         if (info != this) updateAccountInfo(this)

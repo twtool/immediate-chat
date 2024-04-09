@@ -12,3 +12,5 @@ rocketmq:
     group: GatewayService
 gateway:
   id: CHAT_1
+opentelemetry:
+  endpoint: http://opentelemetry.address:4317

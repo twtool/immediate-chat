@@ -21,6 +21,7 @@ dependencies {
     implementation(libs.ktor.cloud.application)
     implementation(libs.ktor.cloud.discovery.polaris)
     implementation(libs.ktor.cloud.route.service)
+    implementation(libs.ktor.cloud.opentelemetry)
     implementation(libs.ktor.server.netty)
     implementation(libs.qcloud.cos.sts.api)
     implementation(libs.jackson.databing)

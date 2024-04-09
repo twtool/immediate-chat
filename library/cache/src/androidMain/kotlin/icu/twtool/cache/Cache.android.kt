@@ -41,6 +41,7 @@ object AndroidCache : Cache {
     override fun getInt(key: String): Int = mmkv.decodeInt(key)
 
     override fun getLong(key: String): Long = mmkv.decodeLong(key)
+    override fun getLong(key: String, defaultValue: Long): Long = mmkv.decodeLong(key, defaultValue)
 
     override fun getFloat(key: String): Float = mmkv.decodeFloat(key)
 

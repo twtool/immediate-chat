@@ -5,13 +5,10 @@ import icu.twtool.chat.server.common.BizException
 import icu.twtool.chat.server.common.Res
 import icu.twtool.ktor.cloud.KtorCloudApplication
 import icu.twtool.ktor.cloud.discovery.polaris.PolarisRegistry
-import icu.twtool.ktor.cloud.exposed.initExposed
+import icu.twtool.ktor.cloud.opentelemetry.OpenTelemetryPlugin
 import icu.twtool.ktor.cloud.plugin.rocketmq.RocketMQPlugin
-import icu.twtool.ktor.cloud.plugin.rocketmq.filterTag
 import icu.twtool.ktor.cloud.redis.initRedis
-import io.ktor.server.application.ApplicationCallPipeline
 import io.ktor.server.application.ApplicationStopPreparing
-import io.ktor.server.application.ApplicationStopped
 import io.ktor.server.netty.Netty
 import org.slf4j.LoggerFactory
 
@@ -29,16 +26,17 @@ fun main() {
         val rocketMQPlugin = RocketMQPlugin()
         install(rocketMQPlugin)
 
+        OpenTelemetryPlugin.install()
+
 //        initExposed {
 //            SchemaUtils.createMissingTablesAndColumns(
 //            )
 //        }
-//        initRedis()
+        initRedis()
 
         installTokenInterceptor()
 
-
-        val chatService = ChatServiceImpl(rocketMQPlugin)
+        val chatService = ChatServiceImpl(this, rocketMQPlugin)
 
         chatService.register()
 

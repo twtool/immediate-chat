@@ -39,6 +39,7 @@ import icu.twtool.chat.app.ChatRoute
 import icu.twtool.chat.cache.produceAccountInfoState
 import icu.twtool.chat.components.Avatar
 import icu.twtool.chat.components.BackTopAppBar
+import icu.twtool.chat.components.LoadingDialog
 import icu.twtool.chat.components.LoadingDialogState
 import icu.twtool.chat.navigation.window.systemBarWindowInsets
 import icu.twtool.chat.server.account.AccountService
@@ -117,6 +118,10 @@ fun AccountInfoView(onBack: () -> Unit, navigateToChatRoute: () -> Unit, navigat
         }
 
         var sendRequestState by remember { mutableStateOf<LoadingDialogState?>(null) }
+
+        sendRequestState?.let {
+            LoadingDialog(it, {})
+        }
 
         Row(Modifier.fillMaxWidth().padding(16.dp)) {
             Button({

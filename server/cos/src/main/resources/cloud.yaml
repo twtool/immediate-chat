@@ -10,3 +10,5 @@ cos:
   app-id: "1256498121"
   bucket: immediate-chat-1256498121
   region: ap-shanghai
+opentelemetry:
+  endpoint: http://opentelemetry.address:4317

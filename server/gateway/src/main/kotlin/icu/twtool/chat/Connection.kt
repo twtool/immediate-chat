@@ -67,7 +67,11 @@ class Connection(private val loggedUID: Long) {
                 val entry = iterator.next()
                 if (entry.value.isAlive(expireAt)) {
                     flag++
-                    entry.value.send(frame)
+                    runCatching {
+                        entry.value.send(frame)
+                    }.exceptionOrNull()?.let {
+                        flag--
+                    }
                     continue
                 }
                 log.info("$entry inactivated.")

@@ -28,6 +28,10 @@ object ChatRoute : NavRoute("Chat", false, MessagesRoute) {
         info = stack.removeLastOrNull()
     }
 
+    override fun clear() {
+        stack.clear()
+    }
+
     suspend fun open(info: AccountInfo, opened: suspend () -> Unit) {
         withContext(Dispatchers.IO) {
             val loggedUID = LoggedInState.info?.uid ?: return@withContext
@@ -83,6 +87,17 @@ object DynamicDetailsRoute : NavRoute("DynamicDetails", false, DynamicRoute) {
 @Stable
 object AccountInfoRoute : NavRoute("AccountInfo", false, FriendsRoute) {
     var info: AccountInfo? by mutableStateOf(null)
+        private set
+
+    private val stack = mutableListOf<AccountInfo>()
+
+    override fun onPop() {
+        info = stack.removeLastOrNull()
+    }
+
+    override fun clear() {
+        stack.clear()
+    }
 
     fun open(info: AccountInfo, opened: () -> Unit) {
         this.info = info

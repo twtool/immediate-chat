@@ -66,11 +66,17 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onResume() {
+        Log.d(TAG, "onResume")
+        super.onResume()
+        startService(Intent(this, WebSocketService::class.java))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.i(TAG, "onCreate")
         super.onCreate(savedInstanceState)
 
-        startService(Intent(this, WebSocketService::class.java))
+//        startService(Intent(this, WebSocketService::class.java))
 
         setContent {
             val windowSize = calculateWindowSizeClass(this)

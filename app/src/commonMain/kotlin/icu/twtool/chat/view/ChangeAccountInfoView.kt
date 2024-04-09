@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.surfaceColorAtElevation
@@ -83,7 +82,7 @@ fun ChangeAccountInfoView(paddingValues: PaddingValues, onBack: () -> Unit) {
         )
     }
     Column(
-        Modifier.fillMaxWidth().fillMaxHeight(),
+        Modifier.fillMaxWidth().fillMaxHeight().padding(paddingValues),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         val scope = rememberCoroutineScope()
