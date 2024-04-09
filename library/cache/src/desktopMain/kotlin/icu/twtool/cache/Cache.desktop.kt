@@ -34,7 +34,7 @@ object DesktopCache : Cache {
     override fun set(key: String, value: Set<String>?): Boolean = mmkv.encode(key, value)
 
     override fun set(key: String, value: Any?, type: KType): Boolean {
-        val strValue = Json.encodeToString(serializer(type), value)
+        val strValue = value?.let { Json.encodeToString(serializer(type), it) }
         return set(key, strValue)
     }
 
