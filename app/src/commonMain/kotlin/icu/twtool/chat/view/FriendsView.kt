@@ -26,6 +26,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -42,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
@@ -136,7 +138,11 @@ fun FriendsView(
                 tint = LocalContentColor.current.copy(DisabledAlpha)
             )
             Spacer(Modifier.requiredWidth(8.dp))
-            BasicTextField(searchInput, { searchInput = it }) {
+            BasicTextField(
+                searchInput, { searchInput = it },
+                textStyle = LocalTextStyle.current.copy(LocalContentColor.current),
+                cursorBrush = SolidColor(LocalContentColor.current),
+            ) {
                 Box(contentAlignment = Alignment.CenterStart) {
                     if (searchInput.isEmpty())
                         Text("搜索", color = LocalContentColor.current.copy(DisabledAlpha))

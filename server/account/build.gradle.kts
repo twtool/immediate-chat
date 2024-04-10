@@ -19,6 +19,7 @@ dependencies {
     implementation(projects.server.account.accountInterceptor)
     implementation(projects.server.dynamic.dynamicInterface)
     implementation(projects.server.gateway.gatewayInterface)
+    implementation(projects.server.notify.notifyInterface)
 
     implementation(libs.exposed.jdbc)
     implementation(libs.exposed.kotlin.datetime)

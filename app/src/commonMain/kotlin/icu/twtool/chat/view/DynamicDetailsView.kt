@@ -42,6 +42,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
@@ -329,7 +330,8 @@ private fun DynamicCommentInput(
                     .background(MaterialTheme.colorScheme.surfaceColorAtElevation(ElevationTokens.Level2))
                     .heightIn(min = 32.dp, max = 128.dp)
                     .padding(8.dp, 4.dp),
-                textStyle = MaterialTheme.typography.bodySmall,
+                textStyle = MaterialTheme.typography.bodySmall.copy(LocalContentColor.current),
+                cursorBrush = SolidColor(LocalContentColor.current),
             ) {
                 Box(contentAlignment = Alignment.CenterStart) {
                     if (content.isEmpty()) Text(

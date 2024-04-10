@@ -26,6 +26,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
@@ -41,6 +42,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -181,7 +183,7 @@ fun LoginTextField(value: String, onValueChange: (String) -> Unit, placeholder: 
     val interactionSource = remember { MutableInteractionSource() }
     val focused by interactionSource.collectIsFocusedAsState()
 
-    val textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center)
+    val textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center, color = LocalContentColor.current)
 
     BasicTextField(
         value, onValueChange,
@@ -192,6 +194,7 @@ fun LoginTextField(value: String, onValueChange: (String) -> Unit, placeholder: 
         interactionSource = interactionSource,
         singleLine = true,
         textStyle = textStyle,
+        cursorBrush = SolidColor(LocalContentColor.current),
         decorationBox = {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 AnimatedVisibility(

@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Button
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -30,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
@@ -72,7 +75,12 @@ private fun DividingLine(height: Dp = 8.dp) {
 }
 
 @Composable
-fun ChangeAccountInfoView(paddingValues: PaddingValues, onBack: () -> Unit) {
+fun ChangeAccountInfoView(
+    paddingValues: PaddingValues, onBack: () -> Unit,
+    hideCancel: Boolean = false,
+    saveButtonText: String = "保存",
+    onSave: () -> Unit = {}
+) {
     val info = LoggedInState.info ?: return Box {
         Text("empty")
     }
@@ -111,12 +119,21 @@ fun ChangeAccountInfoView(paddingValues: PaddingValues, onBack: () -> Unit) {
         DividingLine()
         InfoItem("昵称", onClick = { nicknameFocusRequester.requestFocus() }) {
             Spacer(Modifier.requiredWidth(16.dp))
-            BasicTextField(nickname, { nickname = it }, Modifier.focusRequester(nicknameFocusRequester))
+            BasicTextField(
+                nickname, { nickname = it },
+                Modifier.focusRequester(nicknameFocusRequester),
+                textStyle = LocalTextStyle.current.copy(LocalContentColor.current),
+                cursorBrush = SolidColor(LocalContentColor.current)
+            )
         }
         DividingLine(1.dp)
         InfoItem("签名") {
             Spacer(Modifier.requiredWidth(16.dp))
-            BasicTextField("", {}, enabled = false)
+            BasicTextField(
+                "", {}, enabled = false,
+                textStyle = LocalTextStyle.current.copy(LocalContentColor.current),
+                cursorBrush = SolidColor(LocalContentColor.current)
+            )
         }
 
         DividingLine()
@@ -126,8 +143,10 @@ fun ChangeAccountInfoView(paddingValues: PaddingValues, onBack: () -> Unit) {
             Modifier.fillMaxWidth().padding(16.dp),
             horizontalArrangement = Arrangement.End
         ) {
-            TextButton(onBack, shape = MaterialTheme.shapes.small) {
-                Text("取消")
+            if (!hideCancel) {
+                TextButton(onBack, shape = MaterialTheme.shapes.small) {
+                    Text("取消")
+                }
             }
             Spacer(Modifier.requiredWidth(16.dp))
             Button({
@@ -159,9 +178,10 @@ fun ChangeAccountInfoView(paddingValues: PaddingValues, onBack: () -> Unit) {
                     }
                     delay(1000)
                     updateState = null
+                    onSave()
                 }
             }, shape = MaterialTheme.shapes.small) {
-                Text("保存")
+                Text(saveButtonText)
             }
         }
     }

@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
@@ -20,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.unit.dp
 import icu.twtool.chat.theme.DisabledAlpha
 import icu.twtool.chat.theme.ElevationTokens
@@ -46,7 +48,11 @@ fun SearchInput(
             tint = LocalContentColor.current.copy(DisabledAlpha)
         )
         Spacer(Modifier.requiredWidth(8.dp))
-        BasicTextField(value, onValueChange, Modifier.weight(1f)) {
+        BasicTextField(
+            value, onValueChange, Modifier.weight(1f),
+            textStyle = LocalTextStyle.current.copy(LocalContentColor.current),
+            cursorBrush = SolidColor(LocalContentColor.current)
+        ) {
             Box(contentAlignment = Alignment.CenterStart) {
                 if (value.isEmpty())
                     Text(placeholder, color = LocalContentColor.current.copy(DisabledAlpha))

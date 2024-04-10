@@ -20,6 +20,7 @@ import icu.twtool.chat.server.account.vo.AccountInfo
 import icu.twtool.chat.server.account.vo.FriendRequestVO
 import icu.twtool.chat.server.common.CommonStatus
 import icu.twtool.chat.server.common.Res
+import icu.twtool.chat.server.common.assertFalse
 import icu.twtool.chat.server.common.assertNotNull
 import icu.twtool.chat.server.common.assertTrue
 import icu.twtool.chat.server.common.checkParam
@@ -30,6 +31,9 @@ import icu.twtool.chat.server.dynamic.meesage.TimelineEvent
 import icu.twtool.chat.server.gateway.topic.FriendRequestPushMessage
 import icu.twtool.chat.server.gateway.topic.PUSH_MESSAGE_TOPIC
 import icu.twtool.chat.server.gateway.topic.PushMessage
+import icu.twtool.chat.server.notify.topic.NOTIFY_MESSAGE_TOPIC
+import icu.twtool.chat.server.notify.topic.NotifyMessage
+import icu.twtool.chat.server.notify.topic.NotifyMode
 import icu.twtool.chat.tables.FriendRequests
 import icu.twtool.ktor.cloud.JSON
 import icu.twtool.ktor.cloud.KtorCloudApplication
@@ -37,8 +41,12 @@ import icu.twtool.ktor.cloud.exposed.database
 import icu.twtool.ktor.cloud.exposed.transaction
 import icu.twtool.ktor.cloud.plugin.rocketmq.RocketMQPlugin
 import icu.twtool.ktor.cloud.plugin.rocketmq.buildMessage
+import icu.twtool.ktor.cloud.redis.del
+import icu.twtool.ktor.cloud.redis.exists
+import icu.twtool.ktor.cloud.redis.get
 import icu.twtool.ktor.cloud.redis.incr
 import icu.twtool.ktor.cloud.redis.redis
+import icu.twtool.ktor.cloud.redis.setex
 import icu.twtool.ktor.cloud.route.service.annotation.ServiceImpl
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
@@ -54,10 +62,14 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.math.pow
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.minutes
+
+private val EMAIL_REGEX = Regex("^[A-Za-z0-9]+@[a-zA-Z0-9_-]+(\\.[a-zA-Z0-9_-]+)+\$")
 
 @ServiceImpl
-class AccountServiceImpl(application: KtorCloudApplication, rocketMQPlugin: RocketMQPlugin) : AccountService,
-    Closeable {
+class AccountServiceImpl(
+    application: KtorCloudApplication, rocketMQPlugin: RocketMQPlugin
+) : AccountService, Closeable {
 
     private val pwdSecret = application.config[PwdSecretKey]
     private val tokenSecret = application.config[TokenSecretKey]
@@ -67,7 +79,13 @@ class AccountServiceImpl(application: KtorCloudApplication, rocketMQPlugin: Rock
     private val db = application.database
 
     private val rocketMQProducer =
-        rocketMQPlugin.getProducer(arrayOf(PUSH_MESSAGE_TOPIC, DYNAMIC_TIMELINE_HANDLE_TOPIC))
+        rocketMQPlugin.getProducer(
+            arrayOf(
+                PUSH_MESSAGE_TOPIC,
+                DYNAMIC_TIMELINE_HANDLE_TOPIC,
+                NOTIFY_MESSAGE_TOPIC,
+            )
+        )
 
     override fun close() {
         rocketMQProducer.close()
@@ -84,8 +102,49 @@ class AccountServiceImpl(application: KtorCloudApplication, rocketMQPlugin: Rock
         return verifyToken(param.token).result()
     }
 
+    private fun registerCaptchaKey(email: String): String = "register:captcha:$email"
+
+    override suspend fun getRegisterCaptcha(email: String): Res<Unit> {
+        checkParam(email.matches(EMAIL_REGEX)) { "邮箱格式错误" }
+
+        db.transaction {
+            assertFalse(AccountDao.existsEmail(email)) { "邮箱已注册" }
+        }
+
+        val key = registerCaptchaKey(email)
+
+        if (redis.exists(key)) return Res.success(Unit) // 有效期内不重复发送
+
+        val captcha = Random.nextInt(100_000, 1_000_000).toString()
+
+        redis.setex(key, 5.minutes.inWholeSeconds, captcha)
+
+        rocketMQProducer.send(
+            buildMessage(
+                NOTIFY_MESSAGE_TOPIC, JSON.encodeToString<NotifyMessage>(
+                    NotifyMessage.Captcha(
+                        email,
+                        NotifyMode.EMAIL,
+                        "注册",
+                        captcha,
+                        "5 分钟"
+                    )
+                ).toByteArray(),
+                keys = arrayOf(email)
+            )
+        )
+
+        return Res.success()
+    }
+
     override suspend fun register(param: RegisterParam): Res<String> = db.transaction {
-        // TODO: 验证码邮箱是否存在或者验证码正确
+        RegisterParam.verifyPwd(param.pwd)?.let {
+            return@transaction Res.error(CommonStatus.ParamErr, it)
+        }
+        val key = registerCaptchaKey(param.email)
+        val captcha = redis.get(key)
+        checkParam(param.captcha == captcha) { "验证码错误" }
+        redis.del(key)
 
         val uid = generateUID()
         val pwd = digestPwd(param.pwd)

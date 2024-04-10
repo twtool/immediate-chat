@@ -1,0 +1,21 @@
+server:
+  port: 20500
+service:
+  name: NotifyService
+polaris:
+  addresses:
+    - polaris.address:8091
+  namespace: immediate-chat
+rocketmq:
+  endpoint: rocketmq.address:8081
+  consumer:
+    group: NotifyService
+opentelemetry:
+  endpoint: http://opentelemetry.address:4317
+notify:
+  mail:
+    smtp:
+      host: gz-smtp.qcloudmail.com
+      port: 465
+    user: immediate-chat@mail.twtool.icu
+    password: qL1-lJ5(yU4#xG3>dR1~

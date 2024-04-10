@@ -23,7 +23,6 @@ import icu.twtool.chat.navigation.window.ICWindowSizeClass
 import icu.twtool.chat.navigation.window.ICWindowWidthSizeClass
 import icu.twtool.chat.view.AcceptFriendRequestView
 import icu.twtool.chat.view.AccountInfoView
-import icu.twtool.chat.view.ChangeAccountInfoView
 import icu.twtool.chat.view.ChatSettingsView
 import icu.twtool.chat.view.ChatView
 import icu.twtool.chat.view.FriendsView
@@ -174,7 +173,7 @@ fun AppNavHost(
             )
         }
         composable(ChangeAccountInfoRoute) { _, paddingValues ->
-            ChangeAccountInfoView(paddingValues) { controller.pop() }
+
         }
         composable(ScanCodeRoute) { _, _ ->
             ScanCodeView(navigateToAccountInfoRoute = { controller.navigateTo(AccountInfoRoute) })

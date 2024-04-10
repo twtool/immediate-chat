@@ -7,6 +7,9 @@ Content-Type: application/json
   "pwd": "123456"
 }
 
+### 获取验证码
+GET {{host}}/account/register-captcha?email=1878572503@qq.com
+
 ### 注册账号
 POST {{host}}/account/register
 Content-Type: application/json

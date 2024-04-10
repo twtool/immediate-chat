@@ -13,6 +13,10 @@ fun assertTrue(value: Boolean, status: Status = CommonStatus.Error, lazyMessage:
     if (!value) throw BizException(status, msg = lazyMessage())
 }
 
+fun assertFalse(value: Boolean, status: Status = CommonStatus.Error, lazyMessage: () -> String = { status.msg }) {
+    if (value) throw BizException(status, msg = lazyMessage())
+}
+
 fun <T> assertNotNull(value: T?, status: Status = CommonStatus.Error, lazyMessage: () -> String = { status.msg }): T {
     if (value == null) throw BizException(status, msg = lazyMessage())
     return value

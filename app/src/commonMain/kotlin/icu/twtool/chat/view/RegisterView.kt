@@ -21,8 +21,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
@@ -57,6 +59,7 @@ import icu.twtool.chat.utils.ICBackHandler
 import immediatechat.app.generated.resources.Res
 import immediatechat.app.generated.resources.agree_continue
 import immediatechat.app.generated.resources.back_login_view
+import immediatechat.app.generated.resources.captcha_sent
 import immediatechat.app.generated.resources.confirm
 import immediatechat.app.generated.resources.ic_back
 import immediatechat.app.generated.resources.input_captcha_and_setup_pwd
@@ -168,7 +171,8 @@ private fun InputEmailStep(
         TextField(
             email, onChangeEmail,
             Modifier.width(300.dp),
-            label = { Text(stringResource(Res.string.input_email)) }
+            label = { Text(stringResource(Res.string.input_email)) },
+            singleLine = true
         )
 
         Spacer(Modifier.requiredHeight(32.dp))
@@ -177,14 +181,19 @@ private fun InputEmailStep(
 
         Button(
             {
-                if (!checkedProtocol) {
-                    scope.launch {
-                        snackbarHostState.showSnackbar(checkedProtocolTip, withDismissAction = true)
+                scope.launch {
+                    if (!checkedProtocol) {
+                        snackbarHostState.showSnackbar(
+                            checkedProtocolTip,
+                            withDismissAction = true,
+                        )
+                        return@launch
                     }
-                    return@Button
+
+                    val res = AccountService.get().getRegisterCaptcha(email)
+                    if (res.success) toNext()
+                    else snackbarHostState.showSnackbar(res.msg, withDismissAction = true)
                 }
-                // TODO: 获取验证码
-                toNext()
             },
             Modifier.width(300.dp),
             shape = MaterialTheme.shapes.extraSmall,
@@ -211,7 +220,7 @@ private fun VerifyStep(
 ) {
     val scope = rememberCoroutineScope()
     Column(
-        Modifier.fillMaxSize().padding(16.dp),
+        Modifier.fillMaxSize().padding(16.dp).verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
@@ -225,6 +234,15 @@ private fun VerifyStep(
         var pwd by remember { mutableStateOf("") }
         var confirmPwd by remember { mutableStateOf("") }
 
+        Text(buildAnnotatedString {
+            append(stringResource(Res.string.captcha_sent))
+            withStyle(SpanStyle(color = MaterialTheme.colorScheme.primary)) {
+                append(email)
+            }
+        }, Modifier.width(300.dp))
+
+        Spacer(Modifier.requiredHeight(8.dp))
+
         CaptchaInputField(captcha, onChangeCaptcha = { captcha = it }, Modifier.width(300.dp))
 
         Spacer(Modifier.requiredHeight(32.dp))
@@ -232,7 +250,8 @@ private fun VerifyStep(
         TextField(
             pwd, { pwd = it },
             Modifier.width(300.dp),
-            label = { Text(stringResource(Res.string.input_pwd)) }
+            label = { Text(stringResource(Res.string.input_pwd)) },
+            singleLine = true
         )
 
         Spacer(Modifier.requiredHeight(16.dp))
@@ -240,7 +259,8 @@ private fun VerifyStep(
         TextField(
             confirmPwd, { confirmPwd = it },
             Modifier.width(300.dp),
-            label = { Text(stringResource(Res.string.input_confirm_pwd)) }
+            label = { Text(stringResource(Res.string.input_confirm_pwd)) },
+            singleLine = true
         )
 
         Spacer(Modifier.requiredHeight(32.dp))
@@ -250,9 +270,8 @@ private fun VerifyStep(
         Button(
             {
                 scope.launch {
-                    if (pwd.length < 8) {
-                        // TODO: 修改要求
-                        snackbarHostState.showSnackbar("密码不合要求..")
+                    RegisterParam.verifyPwd(pwd)?.let {
+                        snackbarHostState.showSnackbar(it)
                         return@launch
                     }
                     if (pwd != confirmPwd) {
@@ -281,8 +300,20 @@ private fun VerifyStep(
 
 @Composable
 private fun InputInfoStep(toHome: () -> Unit) {
-    // TODO: 修改显示的按钮和页面大小
-    ChangeAccountInfoView(PaddingValues(0.dp), onBack = toHome)
+    Column(
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Column(Modifier.width(300.dp)) {
+            ChangeAccountInfoView(
+                PaddingValues(0.dp), onBack = toHome,
+                hideCancel = true,
+                saveButtonText = "进入"
+            ) {
+                toHome()
+            }
+        }
+    }
 }
 
 @Composable
@@ -300,6 +331,7 @@ private fun CaptchaInputField(captcha: String, onChangeCaptcha: (String) -> Unit
         },
         modifier, interactionSource = interactionSource,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        singleLine = true
     ) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(16.dp)

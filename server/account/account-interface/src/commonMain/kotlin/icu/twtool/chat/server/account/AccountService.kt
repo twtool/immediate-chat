@@ -28,6 +28,9 @@ interface AccountService {
     @RequestMapping(HttpMethod.Post, "auth")
     suspend fun auth(@Body param: AuthParam): Res<Long>
 
+    @RequestMapping(HttpMethod.Get, "register-captcha")
+    suspend fun getRegisterCaptcha(@Query email: String): Res<Unit>
+
     @RequestMapping(HttpMethod.Post, "register")
     suspend fun register(@Body param: RegisterParam): Res<String>
 
