@@ -87,6 +87,9 @@ actual fun QRCodeCanvas(
     }
 }
 
+/**
+ * 要显示 Logo 时，清除中间显示的点位
+ */
 fun BitMatrix.unsetLogo(left: Int, top: Int, right: Int, bottom: Int) {
     for (x in left until right) {
         for (y in top until bottom) {
@@ -101,6 +104,9 @@ fun BitMatrix.unsetPositionDetectionPatterns() {
     unsetPositionDetectionPattern(IntOffset(0, height - 7))
 }
 
+/**
+ * 需要自定义位置限定图像时清除矩阵中的点位信息
+ */
 fun BitMatrix.unsetPositionDetectionPattern(offset: IntOffset) {
     for (x in 0 until 7) {
         for (y in 0 until 7) {

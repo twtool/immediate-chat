@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,6 +21,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -60,7 +63,10 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.substring
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -68,24 +74,30 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.Popup
 import icu.twtool.chat.app.AccountInfoRoute
 import icu.twtool.chat.app.ChatRoute
+import icu.twtool.chat.cache.FileMapping
 import icu.twtool.chat.cache.loadAccountInfo
 import icu.twtool.chat.cache.produceImageState
 import icu.twtool.chat.components.AccountInfoCard
 import icu.twtool.chat.components.Avatar
 import icu.twtool.chat.components.BackTopAppBar
+import icu.twtool.chat.components.LoadingDialog
 import icu.twtool.chat.components.LoadingDialogState
 import icu.twtool.chat.components.ThumbnailsImage
 import icu.twtool.chat.components.WindowDialog
 import icu.twtool.chat.components.file.FileRes
 import icu.twtool.chat.navigation.window.ICWindowWidthSizeClass
 import icu.twtool.chat.server.account.vo.AccountInfo
+import icu.twtool.chat.server.chat.model.FileMessageContent
 import icu.twtool.chat.server.chat.model.ImageMessageContent
 import icu.twtool.chat.server.chat.model.MessageContent
 import icu.twtool.chat.server.chat.model.PlainMessageContent
+import icu.twtool.chat.server.common.result
 import icu.twtool.chat.state.ChatMessageItem
 import icu.twtool.chat.state.ChatViewState
 import icu.twtool.chat.state.LoggedInState
+import icu.twtool.chat.theme.DisabledAlpha
 import icu.twtool.chat.theme.ElevationTokens
+import icu.twtool.chat.utils.FileType
 import icu.twtool.chat.utils.onEnterKeyPressed
 import icu.twtool.chat.utils.rememberFileChooser
 import icu.twtool.cos.CommonObjectMetadata
@@ -93,9 +105,14 @@ import icu.twtool.cos.getCosClient
 import icu.twtool.logger.getLogger
 import immediatechat.app.generated.resources.Res
 import immediatechat.app.generated.resources.ic_emoji
+import immediatechat.app.generated.resources.ic_file
 import immediatechat.app.generated.resources.ic_photo
+import immediatechat.app.generated.resources.ic_unknown_file
+import immediatechat.app.generated.resources.ic_word
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.painterResource
 
 private val log = getLogger("icu.twtool.chat.view.ChatView.kt")
@@ -124,23 +141,54 @@ fun ChatView(
     val state = remember(info.uid) { ChatViewState(scope, info.uid) }
     var showChatSettingPopup by remember { mutableStateOf(false) }
 
-    var sendImageDialogState by remember { mutableStateOf<LoadingDialogState?>(null) }
+    var sendingDialogState by remember { mutableStateOf<LoadingDialogState?>(null) }
 
     val sendImageFileChooser = rememberFileChooser {
-        if (it.isEmpty()) return@rememberFileChooser
+        if (it.isEmpty() || sendingDialogState != null) return@rememberFileChooser
         val size = it.size
         scope.launch {
             it.forEachIndexed { index, file ->
-                sendImageDialogState = LoadingDialogState("发送中($index/$size)")
+                sendingDialogState = LoadingDialogState("发送中($index/$size)")
                 val delay = launch { delay(200) }
                 val key = "res/${LoggedInState.info?.uid}/${file.hashKey}"
                 getCosClient().putObject(key, file.inputStream(), CommonObjectMetadata(file.size))
                 state.send(ImageMessageContent(key), info.uid)
                 delay.join()
             }
-            sendImageDialogState = null
+            sendingDialogState = null
         }
     }
+
+    val sendFileChooser = rememberFileChooser {
+        if (it.isEmpty() || sendingDialogState != null) return@rememberFileChooser
+        val size = it.size
+        scope.launch {
+            it.forEachIndexed { index, file ->
+                sendingDialogState = LoadingDialogState("发送中($index/$size)")
+                val delay = launch { delay(200) }
+                val key = "res/${LoggedInState.info?.uid}/${file.hashKey}"
+                val success = withContext(Dispatchers.IO) {
+                    val res =
+                        getCosClient().putObject(key, file.inputStream(), CommonObjectMetadata(file.size))?.apply {
+                            FileMapping[key] = file.save()
+                            state.send(FileMessageContent(key, file.filename, file.extension), info.uid)
+                        } != null
+                    delay.join()
+                    res
+                }
+                if (!success) {
+                    sendingDialogState = LoadingDialogState("发送失败", error = true)
+                    delay(2000)
+                }
+                sendingDialogState = null
+            }
+        }
+    }
+
+    sendingDialogState?.let {
+        LoadingDialog(it, {}, DialogProperties(false, dismissOnClickOutside = false))
+    }
+
     Column(Modifier.fillMaxSize()) {
         ChatInfoTopAppBar(
             onBack, info.nickname ?: "未命名用户",
@@ -174,9 +222,15 @@ fun ChatView(
                     paddingValues,
                     sendImage = {
                         scope.launch {
-                            sendImageFileChooser.launch()
+                            sendImageFileChooser.launch(FileType.IMAGE)
                         }
-                    }) {
+                    },
+                    sendFile = {
+                        scope.launch {
+                            sendFileChooser.launch(FileType.FILE)
+                        }
+                    }
+                ) {
                     scope.launch {
                         state.send(it, info.uid)
                     }
@@ -291,6 +345,78 @@ private fun RenderMessageContent(message: MessageContent, onLookFile: (FileRes) 
                 }
             }
         }
+
+        is FileMessageContent -> {
+            val scope = rememberCoroutineScope()
+            Surface(
+                color = MaterialTheme.colorScheme.surfaceColorAtElevation(ElevationTokens.Level1),
+                shape = MaterialTheme.shapes.extraSmall,
+                onClick = {
+
+                }
+            ) {
+                Column(Modifier.width(250.dp)) {
+                    Row(
+                        Modifier.fillMaxWidth().padding(16.dp, 8.dp).height(IntrinsicSize.Min),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column(Modifier.fillMaxHeight()) {
+                            Text(
+                                message.filename + "." + message.extension,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            Spacer(Modifier.requiredHeight(8.dp))
+                            Text(
+                                message.size ?: "未知大小",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = LocalContentColor.current.copy(DisabledAlpha)
+                            )
+                        }
+                        Spacer(Modifier.requiredWidth(16.dp))
+                        Image(
+                            when (message.extension) {
+                                "docx" -> painterResource(Res.drawable.ic_word)
+                                else -> painterResource(Res.drawable.ic_unknown_file)
+                            },
+                            null,
+                            Modifier.height(56.dp).padding(8.dp),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                    Spacer(
+                        Modifier.height(1.dp).fillMaxWidth()
+                            .background(MaterialTheme.colorScheme.surfaceColorAtElevation(ElevationTokens.Level4))
+                    )
+                    Surface(
+                        color = MaterialTheme.colorScheme.surfaceColorAtElevation(ElevationTokens.Level2)
+                    ) {
+                        val downloadState by produceState("未下载") {
+                            if (FileMapping[message.url] != null) {
+                                value = "已下载"
+                            }
+                        }
+                        Row(
+                            Modifier.fillMaxWidth().padding(16.dp, 4.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                message.origin ?: "未知来源",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = LocalContentColor.current.copy(DisabledAlpha),
+                            )
+                            Text(
+                                downloadState,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = LocalContentColor.current.copy(DisabledAlpha),
+                            )
+                        }
+                    }
+                }
+
+            }
+        }
     }
 }
 
@@ -381,6 +507,7 @@ fun ChatViewIcon(tooltip: String, icon: Painter, onClick: () -> Unit) {
 fun ChatViewExpandedInput(
     sending: Boolean, paddingValues: PaddingValues,
     sendImage: () -> Unit,
+    sendFile: () -> Unit,
     onSend: (value: MessageContent) -> Unit,
 ) {
     var inputValue: String by remember { mutableStateOf("") }
@@ -392,6 +519,7 @@ fun ChatViewExpandedInput(
             Row(Modifier.padding(8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ChatViewIcon("表情", painterResource(Res.drawable.ic_emoji)) {}
                 ChatViewIcon("图片", painterResource(Res.drawable.ic_photo)) { sendImage() }
+                ChatViewIcon("文件", painterResource(Res.drawable.ic_file)) { sendFile() }
             }
             BasicTextField(
                 inputValue, { inputValue = it },

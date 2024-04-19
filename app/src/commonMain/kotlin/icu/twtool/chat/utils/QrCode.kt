@@ -34,7 +34,9 @@ fun DrawScope.drawPositionDetectionPatterns(color: Color, radius: Float, width: 
     }
 }
 
-fun DrawScope.drawPositionDetectionPattern(color: Color, radius: Float, width: Float, offset: Offset) {
+fun DrawScope.drawPositionDetectionPattern(
+    color: Color, radius: Float, width: Float, offset: Offset
+) {
     drawCircle(
         color,
         style = Stroke(width),

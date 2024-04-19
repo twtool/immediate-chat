@@ -141,8 +141,6 @@ fun LoginContent(
                         onSuccess()
                         return@launch
                     }
-//                    if (!res.success) {
-//                    }
                     doDelay.join()
                     doLogin = false
                     onError(res.msg)

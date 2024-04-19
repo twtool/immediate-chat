@@ -23,6 +23,8 @@ kotlin {
         }
     }
 
+    this.
+
     jvm("desktop")
 
 

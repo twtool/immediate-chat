@@ -8,6 +8,9 @@ interface ICFile {
 
     val key: String
 
+    val filename: String
+    val extension: String
+
     @OptIn(ExperimentalStdlibApi::class)
     val hashKey: String get() = sha1(key.toByteArray()).toHexString() + currentEpochSeconds()
 
@@ -16,4 +19,6 @@ interface ICFile {
     fun inputStream(): InputStream
 
     val size: Long
+
+    fun save(): String
 }

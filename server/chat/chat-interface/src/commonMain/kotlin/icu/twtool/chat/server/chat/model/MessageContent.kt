@@ -23,3 +23,15 @@ data class ImageMessageContent(
 
     override fun renderText(): String = "[图片]"
 }
+
+@Serializable
+data class FileMessageContent(
+    val url: String,
+    val filename: String,
+    val extension: String,
+    val size: String? = null,
+    val origin: String? = null
+) : MessageContent() {
+
+    override fun renderText(): String = "[文件]$filename"
+}

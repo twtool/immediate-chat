@@ -47,6 +47,7 @@ import icu.twtool.chat.server.account.param.UpdateInfoParam
 import icu.twtool.chat.service.get
 import icu.twtool.chat.state.LoggedInState
 import icu.twtool.chat.theme.ElevationTokens
+import icu.twtool.chat.utils.FileType
 import icu.twtool.chat.utils.rememberFileChooser
 import icu.twtool.cos.CommonObjectMetadata
 import icu.twtool.cos.getCosClient
@@ -112,7 +113,7 @@ fun ChangeAccountInfoView(
         Spacer(Modifier.requiredHeight(16.dp))
         Avatar(chooserFilePainter ?: avatarPainter, 56.dp, modifier = Modifier.clickable {
             scope.launch {
-                fileChooser.launch()
+                fileChooser.launch(FileType.IMAGE)
             }
         })
         Spacer(Modifier.requiredHeight(16.dp))

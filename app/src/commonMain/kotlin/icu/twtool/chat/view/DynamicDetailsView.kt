@@ -324,7 +324,7 @@ private fun DynamicCommentInput(
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             BasicTextField(
-                content, { content = it.trim().substring(0, it.length.coerceAtMost(255)) },
+                content, { content = it.substring(0, it.length.coerceAtMost(255)) },
                 Modifier.clip(MaterialTheme.shapes.extraSmall)
                     .weight(1f)
                     .background(MaterialTheme.colorScheme.surfaceColorAtElevation(ElevationTokens.Level2))

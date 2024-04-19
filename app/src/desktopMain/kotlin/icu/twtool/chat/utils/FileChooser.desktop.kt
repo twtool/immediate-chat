@@ -27,10 +27,13 @@ class DesktopFileChooser(
 
     private val fileChooser by lazy { JFileChooser() }
 
-    override suspend fun launch() {
+    override suspend fun launch(input: FileType) {
         withContext(Dispatchers.IO) {
             show = true
-            fileChooser.fileFilter = FileNameExtensionFilter("图片文件", "jpg", "jpeg", "png")
+            fileChooser.fileFilter = when (input) {
+                FileType.IMAGE -> FileNameExtensionFilter("图片文件", "jpg", "jpeg", "png")
+                FileType.FILE -> null
+            }
             fileChooser.isMultiSelectionEnabled = true
             if (fileChooser.showOpenDialog(parent) == JFileChooser.APPROVE_OPTION) {
                 onImageSelected(fileChooser.selectedFiles.map { ICFileImpl(it) })
@@ -42,9 +45,9 @@ class DesktopFileChooser(
 }
 
 @Composable
-actual fun rememberFileChooser(onImageSelected: (List<ICFile>) -> Unit): FileChooser {
+actual fun rememberFileChooser(onSelected: (List<ICFile>) -> Unit): FileChooser {
     val window = LocalComposeWindow.current
-    val chooser = remember { DesktopFileChooser(window, onImageSelected) }
+    val chooser = remember { DesktopFileChooser(window, onSelected) }
     ICBackHandler(chooser.show) {}
     return chooser
 }

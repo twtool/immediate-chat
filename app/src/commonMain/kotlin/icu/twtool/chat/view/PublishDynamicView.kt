@@ -66,6 +66,7 @@ import icu.twtool.chat.service.get
 import icu.twtool.chat.state.LoggedInState
 import icu.twtool.chat.theme.DisabledAlpha
 import icu.twtool.chat.theme.ElevationTokens
+import icu.twtool.chat.utils.FileType
 import icu.twtool.chat.utils.rememberFileChooser
 import icu.twtool.cos.CommonObjectMetadata
 import icu.twtool.cos.getCosClient
@@ -151,7 +152,7 @@ fun AttachmentsChooser(
                     .clickable {
                         scope.launch {
                             withContext(Dispatchers.IO) {
-                                fileChooser.launch()
+                                fileChooser.launch(FileType.IMAGE)
                             }
                         }
                     },
