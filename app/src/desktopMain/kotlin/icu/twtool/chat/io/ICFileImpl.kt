@@ -1,13 +1,23 @@
 package icu.twtool.chat.io
 
 import icu.twtool.chat.constants.ApplicationDir
+import java.awt.Desktop
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.InputStream
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
-class ICFileImpl(private val file: File) : ICFile {
+class ICFileImpl(private val file: File) : ICFile, OpenableFile {
+
+    override fun open(): Boolean {
+        Desktop.getDesktop().open(file)
+        return true
+    }
+
+    override fun exists(): Boolean {
+        return file.exists()
+    }
 
     override val key: String = file.absolutePath
 
@@ -15,9 +25,9 @@ class ICFileImpl(private val file: File) : ICFile {
 
     override val extension: String = file.extension
     override fun save(): String {
-        val file: File = File(ApplicationDir).run { if (extension.isNotEmpty()) resolve(extension) else this }.let {
+        val file: File = File(ApplicationDir).run { if (extension.isNotBlank()) resolve(extension) else this }.let {
             var i = 0
-            val suffix = if (extension.isNotEmpty()) ".$extension" else ""
+            val suffix = if (extension.isNotBlank()) ".$extension" else ""
             var file: File
             while (true) {
                 val offset = if (i++ > 0) "($i)" else ""

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+    <paths>
+        <external-path
+                name="external-cache-path"
+                path="."/>
+    </paths>
+    <!-- 或者使用其他标签指定特定的路径 -->
+</resources>

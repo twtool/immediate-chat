@@ -4,9 +4,9 @@ import icu.twtool.chat.constants.ApplicationDir
 import org.jetbrains.skiko.OS
 import org.jetbrains.skiko.hostOs
 
-fun libFileName(name: String): String = name + when (hostOs) {
-    OS.Android, OS.Linux -> ".so"
-    OS.Windows -> ".dll"
+fun libFileName(name: String): String =  when (hostOs) {
+    OS.Android, OS.Linux -> "lib$name.so"
+    OS.Windows -> "$name.dll"
     OS.MacOS -> TODO()
     OS.Ios -> TODO()
     else -> TODO()
@@ -14,5 +14,5 @@ fun libFileName(name: String): String = name + when (hostOs) {
 
 @Suppress("UnsafeDynamicallyLoadedCode")
 fun loadLibrary(name: String) {
-    System.load(ApplicationDir + "\\" + libFileName(name))
+    System.load(ApplicationDir + "/" + libFileName(name))
 }

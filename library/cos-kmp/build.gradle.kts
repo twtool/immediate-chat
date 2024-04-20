@@ -24,6 +24,7 @@ kotlin {
 
         commonMain.dependencies {
             implementation(projects.library.logger)
+            implementation(projects.library.cache)
         }
 
         desktopMain.dependencies {

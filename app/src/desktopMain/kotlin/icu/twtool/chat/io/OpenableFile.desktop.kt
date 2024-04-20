@@ -1,15 +1,16 @@
 package icu.twtool.chat.io
 
-import java.awt.Desktop
+import androidx.compose.runtime.Composable
 import java.io.File
 
-class OpenableFileImpl(private val file: File) : OpenableFile {
+class DesktopOpenableFileUtil : OpenableFileUtil {
 
-    override fun open() {
-        Desktop.getDesktop().open(file)
+    override fun get(path: String): OpenableFile {
+        return ICFileImpl(File(path))
     }
 }
 
-actual fun getOpenableFile(path: String): OpenableFile {
-    return OpenableFileImpl(File(path))
+@Composable
+actual fun rememberOpenableFileUtil(): OpenableFileUtil {
+    return DesktopOpenableFileUtil()
 }

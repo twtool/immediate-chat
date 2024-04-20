@@ -1,31 +1,12 @@
 package icu.twtool.chat.view
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredHeight
-import androidx.compose.foundation.layout.requiredWidth
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -33,20 +14,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PlainTooltip
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TooltipBox
-import androidx.compose.material3.TooltipDefaults
-import androidx.compose.material3.rememberTooltipState
-import androidx.compose.material3.surfaceColorAtElevation
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -56,6 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
@@ -66,7 +35,6 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.substring
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -77,21 +45,17 @@ import icu.twtool.chat.app.ChatRoute
 import icu.twtool.chat.cache.FileMapping
 import icu.twtool.chat.cache.loadAccountInfo
 import icu.twtool.chat.cache.produceImageState
-import icu.twtool.chat.components.AccountInfoCard
-import icu.twtool.chat.components.Avatar
-import icu.twtool.chat.components.BackTopAppBar
-import icu.twtool.chat.components.LoadingDialog
-import icu.twtool.chat.components.LoadingDialogState
-import icu.twtool.chat.components.ThumbnailsImage
-import icu.twtool.chat.components.WindowDialog
+import icu.twtool.chat.components.*
 import icu.twtool.chat.components.file.FileRes
+import icu.twtool.chat.io.ICFile
+import icu.twtool.chat.io.OpenableFile
+import icu.twtool.chat.io.rememberOpenableFileUtil
 import icu.twtool.chat.navigation.window.ICWindowWidthSizeClass
 import icu.twtool.chat.server.account.vo.AccountInfo
 import icu.twtool.chat.server.chat.model.FileMessageContent
 import icu.twtool.chat.server.chat.model.ImageMessageContent
 import icu.twtool.chat.server.chat.model.MessageContent
 import icu.twtool.chat.server.chat.model.PlainMessageContent
-import icu.twtool.chat.server.common.result
 import icu.twtool.chat.state.ChatMessageItem
 import icu.twtool.chat.state.ChatViewState
 import icu.twtool.chat.state.LoggedInState
@@ -101,14 +65,11 @@ import icu.twtool.chat.utils.FileType
 import icu.twtool.chat.utils.onEnterKeyPressed
 import icu.twtool.chat.utils.rememberFileChooser
 import icu.twtool.cos.CommonObjectMetadata
+import icu.twtool.cos.TaskResult
+import icu.twtool.cos.TaskState
 import icu.twtool.cos.getCosClient
 import icu.twtool.logger.getLogger
-import immediatechat.app.generated.resources.Res
-import immediatechat.app.generated.resources.ic_emoji
-import immediatechat.app.generated.resources.ic_file
-import immediatechat.app.generated.resources.ic_photo
-import immediatechat.app.generated.resources.ic_unknown_file
-import immediatechat.app.generated.resources.ic_word
+import immediatechat.app.generated.resources.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -128,6 +89,7 @@ fun ChatInfoTopAppBar(onBack: () -> Unit, title: String, onClickMenu: () -> Unit
 
 @Composable
 fun ChatView(
+    snackbarHostState: SnackbarHostState,
     widthSizeClass: ICWindowWidthSizeClass,
     paddingValues: PaddingValues,
     onBack: () -> Unit,
@@ -139,6 +101,7 @@ fun ChatView(
     val info = ChatRoute.info ?: return
     val scope = rememberCoroutineScope()
     val state = remember(info.uid) { ChatViewState(scope, info.uid) }
+    val openableFileUtil = rememberOpenableFileUtil()
     var showChatSettingPopup by remember { mutableStateOf(false) }
 
     var sendingDialogState by remember { mutableStateOf<LoadingDialogState?>(null) }
@@ -159,11 +122,11 @@ fun ChatView(
         }
     }
 
-    val sendFileChooser = rememberFileChooser {
-        if (it.isEmpty() || sendingDialogState != null) return@rememberFileChooser
-        val size = it.size
+    val sendFile = sendFile@{ files: List<ICFile> ->
+        if (files.isEmpty() || sendingDialogState != null) return@sendFile
+        val size = files.size
         scope.launch {
-            it.forEachIndexed { index, file ->
+            files.forEachIndexed { index, file ->
                 sendingDialogState = LoadingDialogState("发送中($index/$size)")
                 val delay = launch { delay(200) }
                 val key = "res/${LoggedInState.info?.uid}/${file.hashKey}"
@@ -171,7 +134,16 @@ fun ChatView(
                     val res =
                         getCosClient().putObject(key, file.inputStream(), CommonObjectMetadata(file.size))?.apply {
                             FileMapping[key] = file.save()
-                            state.send(FileMessageContent(key, file.filename, file.extension), info.uid)
+                            val fileSize =
+                                if (file.size / 1024 > 1024) "${String.format("%.2f", file.size / 1024 / 1024.0)} MB"
+                                else "${String.format("%.2f", file.size / 1024.0)} KB"
+                            state.send(
+                                FileMessageContent(
+                                    key, file.filename, file.extension,
+                                    fileSize,
+                                    origin = "即时聊天 Linux 版"
+                                ), info.uid
+                            )
                         } != null
                     delay.join()
                     res
@@ -183,6 +155,10 @@ fun ChatView(
                 sendingDialogState = null
             }
         }
+    }
+
+    val sendFileChooser = rememberFileChooser {
+        sendFile(it)
     }
 
     sendingDialogState?.let {
@@ -203,6 +179,7 @@ fun ChatView(
             Column(Modifier.fillMaxSize()) {
                 Box(Modifier.weight(1f)) {
                     ChatViewMessages(
+                        snackbarHostState,
                         widthSizeClass,
                         state,
                         onLookFile = onLookFile,
@@ -226,8 +203,15 @@ fun ChatView(
                         }
                     },
                     sendFile = {
-                        scope.launch {
+                        if (it == null) scope.launch {
                             sendFileChooser.launch(FileType.FILE)
+                        } else {
+                            val files = it.map { path ->
+                                openableFileUtil.get(path.replaceFirst("file:", "").replace("%20", " "))
+                            }.filter(OpenableFile::exists)
+                            if (files.isNotEmpty()) {
+                                sendFile(files)
+                            }
                         }
                     }
                 ) {
@@ -291,6 +275,7 @@ fun ChatViewMessageItem(
     item: ChatMessageItem,
     onLookInfo: (AccountInfo?) -> Unit,
     onLookFile: (FileRes) -> Unit,
+    showMessage: (String) -> Unit,
     navigateChatRoute: (AccountInfo?) -> Unit
 ) {
 
@@ -304,7 +289,7 @@ fun ChatViewMessageItem(
             Modifier.weight(1f),
             horizontalArrangement = if (item.me) Arrangement.End else Arrangement.Start
         ) {
-            RenderMessageContent(item.message.content, onLookFile = onLookFile)
+            RenderMessageContent(item.id, item.message.content, onLookFile = onLookFile, showMessage = showMessage)
         }
         if (item.me) ChatItemAvatar(item, widthSizeClass, onLookInfo, navigateChatRoute)
         else Box(Modifier.size(42.dp))
@@ -312,7 +297,11 @@ fun ChatViewMessageItem(
 }
 
 @Composable
-private fun RenderMessageContent(message: MessageContent, onLookFile: (FileRes) -> Unit) {
+private fun RenderMessageContent(
+    id: Long, message: MessageContent,
+    onLookFile: (FileRes) -> Unit,
+    showMessage: (String) -> Unit
+) {
     when (message) {
         is PlainMessageContent -> {
             Surface(
@@ -348,11 +337,48 @@ private fun RenderMessageContent(message: MessageContent, onLookFile: (FileRes) 
 
         is FileMessageContent -> {
             val scope = rememberCoroutineScope()
+            var taskResult by remember { mutableStateOf<TaskResult?>(null) }
+            var taskState by remember { mutableStateOf<TaskState?>(null) }
+            val taskPercentage = remember { Animatable(0f) }
+            val openableFileUtil = rememberOpenableFileUtil()
+
             Surface(
                 color = MaterialTheme.colorScheme.surfaceColorAtElevation(ElevationTokens.Level1),
                 shape = MaterialTheme.shapes.extraSmall,
                 onClick = {
+                    val path = FileMapping[message.url]
+                    if (path != null) {
+                        if (!openableFileUtil.get(path).open()) {
+                            showMessage("没有应用支持此文件")
+                        }
+                    } else {
+                        if (taskResult == null) {
+                            taskResult = getCosClient().getObject(
+                                message.url, id,
+                                message.filename, message.extension,
+                                onChangePercentage = { scope.launch { taskPercentage.animateTo(it) } },
+                                onChangeState = { state ->
+                                    taskState = state
+                                    taskResult?.let {
+                                        if (state == TaskState.COMPLETED) {
+                                            FileMapping[message.url] = it.path
+                                        }
+                                    }
+                                }
+                            )
+                        }
 
+                        taskState?.let {
+                            when (it) {
+                                TaskState.PAUSED -> taskResult?.parse()
+                                TaskState.UNKNOWN -> {}
+                                TaskState.FAILED -> {}
+                                TaskState.COMPLETED -> {}
+                                TaskState.IN_PROGRESS -> {}
+                                TaskState.CANCELED -> {}
+                            }
+                        }
+                    }
                 }
             ) {
                 Column(Modifier.width(250.dp)) {
@@ -361,7 +387,7 @@ private fun RenderMessageContent(message: MessageContent, onLookFile: (FileRes) 
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Column(Modifier.fillMaxHeight()) {
+                        Column(Modifier.fillMaxHeight().weight(1f, false)) {
                             Text(
                                 message.filename + "." + message.extension,
                                 maxLines = 2,
@@ -378,6 +404,7 @@ private fun RenderMessageContent(message: MessageContent, onLookFile: (FileRes) 
                         Image(
                             when (message.extension) {
                                 "docx" -> painterResource(Res.drawable.ic_word)
+                                "png" -> painterResource(Res.drawable.ic_png)
                                 else -> painterResource(Res.drawable.ic_unknown_file)
                             },
                             null,
@@ -385,17 +412,41 @@ private fun RenderMessageContent(message: MessageContent, onLookFile: (FileRes) 
                             contentScale = ContentScale.Crop
                         )
                     }
-                    Spacer(
-                        Modifier.height(1.dp).fillMaxWidth()
-                            .background(MaterialTheme.colorScheme.surfaceColorAtElevation(ElevationTokens.Level4))
-                    )
+                    Box(Modifier.fillMaxWidth().height(1.dp)) {
+                        Spacer(
+                            Modifier.fillMaxSize()
+                                .background(MaterialTheme.colorScheme.surfaceColorAtElevation(ElevationTokens.Level4))
+                        )
+                        if (taskResult != null) {
+                            if (taskState != TaskState.COMPLETED) {
+                                if (taskState == TaskState.FAILED) {
+                                    Box(
+                                        Modifier.fillMaxHeight().fillMaxWidth()
+                                            .background(MaterialTheme.colorScheme.error)
+                                    )
+                                } else {
+                                    Box(
+                                        Modifier.fillMaxHeight().fillMaxWidth(taskPercentage.value)
+                                            .background(MaterialTheme.colorScheme.primary)
+                                    )
+                                }
+                            }
+                        }
+                    }
                     Surface(
                         color = MaterialTheme.colorScheme.surfaceColorAtElevation(ElevationTokens.Level2)
                     ) {
-                        val downloadState by produceState("未下载") {
-                            if (FileMapping[message.url] != null) {
-                                value = "已下载"
+                        val downloadState by produceState("未下载", taskState) {
+                            val res = if (taskState == TaskState.FAILED) {
+                                "下载失败"
+                            } else if (FileMapping[message.url] != null) {
+                                "已下载"
+                            } else if (taskState != null) {
+                                "下载中"
+                            } else {
+                                null
                             }
+                            res?.let { value = it }
                         }
                         Row(
                             Modifier.fillMaxWidth().padding(16.dp, 4.dp),
@@ -422,6 +473,7 @@ private fun RenderMessageContent(message: MessageContent, onLookFile: (FileRes) 
 
 @Composable
 fun ChatViewMessages(
+    snackbarHostState: SnackbarHostState,
     widthSizeClass: ICWindowWidthSizeClass,
     state: ChatViewState,
     onLookFile: (FileRes) -> Unit,
@@ -473,6 +525,7 @@ fun ChatViewMessages(
                     }
                 },
                 onLookFile = onLookFile,
+                showMessage = { scope.launch { snackbarHostState.showSnackbar(it) } },
                 navigateChatRoute = {
                     it?.let { info ->
                         scope.launch {
@@ -504,22 +557,30 @@ fun ChatViewIcon(tooltip: String, icon: Painter, onClick: () -> Unit) {
 }
 
 @Composable
+expect fun Modifier.onIcExternalDrag(onDragFiles: (List<String>) -> Unit): Modifier
+
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
 fun ChatViewExpandedInput(
     sending: Boolean, paddingValues: PaddingValues,
     sendImage: () -> Unit,
-    sendFile: () -> Unit,
+    sendFile: (files: List<String>?) -> Unit,
     onSend: (value: MessageContent) -> Unit,
 ) {
     var inputValue: String by remember { mutableStateOf("") }
     Surface(
-        Modifier.fillMaxWidth()/*padding(bottom = paddingValues.calculateBottomPadding())*/,
+        Modifier.fillMaxWidth()
+            .onIcExternalDrag {
+                sendFile(it)
+            }
+        /*padding(bottom = paddingValues.calculateBottomPadding())*/,
         color = MaterialTheme.colorScheme.surfaceColorAtElevation(ElevationTokens.Level1)
     ) {
         Column(Modifier.navigationBarsPadding().imePadding()) {
             Row(Modifier.padding(8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ChatViewIcon("表情", painterResource(Res.drawable.ic_emoji)) {}
                 ChatViewIcon("图片", painterResource(Res.drawable.ic_photo)) { sendImage() }
-                ChatViewIcon("文件", painterResource(Res.drawable.ic_file)) { sendFile() }
+                ChatViewIcon("文件", painterResource(Res.drawable.ic_file)) { sendFile(null) }
             }
             BasicTextField(
                 inputValue, { inputValue = it },

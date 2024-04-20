@@ -1,8 +1,18 @@
 package icu.twtool.chat.io
 
-interface OpenableFile {
+import androidx.compose.runtime.Composable
 
-    fun open()
+interface OpenableFile : ICFile {
+
+    fun open(): Boolean
+
+    fun exists(): Boolean
 }
 
-expect fun getOpenableFile(path: String): OpenableFile
+interface OpenableFileUtil {
+
+    fun get(path: String): OpenableFile
+}
+
+@Composable
+expect fun rememberOpenableFileUtil(): OpenableFileUtil

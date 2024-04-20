@@ -3,14 +3,36 @@ package icu.twtool.chat.io
 import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
+import com.google.android.gms.common.util.IOUtils
 import java.io.ByteArrayInputStream
+import java.io.File
 import java.io.InputStream
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 import java.util.UUID
 
 class UriICFile(
     private val context: Context,
     private val uri: Uri
 ) : ICFile {
+
+    override fun save(): String {
+        val file: File = context.cacheDir.run { if (extension.isNotBlank()) resolve(extension) else this }.let {
+            var i = 0
+            val suffix = if (extension.isNotBlank()) ".$extension" else ""
+            var file: File
+            while (true) {
+                val offset = if (i++ > 0) "($i)" else ""
+                file = it.resolve("$filename$offset$suffix")
+                if (file.exists()) continue
+                break
+            }
+            file
+        }
+
+        inputStream().copyTo(file.outputStream())
+        return file.absolutePath
+    }
 
     override val key: String = uri.toString()
 

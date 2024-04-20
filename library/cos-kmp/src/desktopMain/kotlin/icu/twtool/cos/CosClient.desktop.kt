@@ -47,6 +47,17 @@ object DesktopCosClient : CosClient {
 
         return client.getObject(request).objectContent
     }
+
+    override fun getObject(
+        key: String,
+        id: Long,
+        filename: String?,
+        extension: String?,
+        onChangePercentage: (percentage: Float) -> Unit,
+        onChangeState: (state: TaskState) -> Unit
+    ): TaskResult {
+        TODO("Not yet implemented")
+    }
 }
 
 actual fun getCosClient(): CosClient = DesktopCosClient

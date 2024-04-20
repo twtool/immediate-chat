@@ -110,7 +110,7 @@ android {
         create("immediate-chat") {
             storeFile = file("${System.getProperty("user.home")}/immediate-chat.jks")
             storePassword = "immediate-chat"
-            keyAlias = "immediate-chat"
+            keyAlias = "ic"
             keyPassword = "immediate-chat"
         }
     }

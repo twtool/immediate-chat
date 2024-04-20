@@ -75,6 +75,7 @@ fun AppNavHost(
                 },
                 {
                     ChatView(
+                        snackbarHostState,
                         state.windowSize.widthSizeClass,
                         paddingValues,
                         onBack = { controller.pop() },
@@ -88,6 +89,7 @@ fun AppNavHost(
         }
         composable(ChatRoute) { state, paddingValues ->
             ChatView(
+                snackbarHostState,
                 state.windowSize.widthSizeClass, paddingValues, onBack = { controller.pop() },
                 onLookFile = onLook,
                 navigateToChatSettingsRoute = {
@@ -107,6 +109,7 @@ fun AppNavHost(
                 },
                 {
                     ChatView(
+                        snackbarHostState,
                         state.windowSize.widthSizeClass,
                         paddingValues,
                         onBack = { controller.pop() },

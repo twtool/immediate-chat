@@ -25,12 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Tray
-import androidx.compose.ui.window.Window
-import androidx.compose.ui.window.WindowPosition
-import androidx.compose.ui.window.awaitApplication
-import androidx.compose.ui.window.rememberTrayState
-import androidx.compose.ui.window.rememberWindowState
+import androidx.compose.ui.window.*
 import icu.twtool.cache.DesktopCache
 import icu.twtool.chat.App
 import icu.twtool.chat.WebSocketService
@@ -61,7 +56,9 @@ fun main() = runBlocking {
     awaitApplication {
         val trayState = rememberTrayState()
 
-        Tray(painterResource(Res.drawable.logo), state = trayState, tooltip = stringResource(Res.string.app_name))
+        if (isTraySupported) {
+            Tray(painterResource(Res.drawable.logo), state = trayState, tooltip = stringResource(Res.string.app_name))
+        }
         service.start(trayState)
         systemBarHeight = 24.dp
 

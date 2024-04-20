@@ -70,7 +70,8 @@ class CosServiceImpl(application: KtorCloudApplication) : CosService {
                 statement.setEffect(EffectAllow)
                 statement.addActions(
                     arrayOf(
-                        "cos:GetObject" // 简单下载 https://cloud.tencent.com/document/product/436/7753
+                        "cos:GetObject", // 简单下载 https://cloud.tencent.com/document/product/436/7753
+                        "cos:HeadObject"
                     )
                 )
                 statement.addResources(
