@@ -49,7 +49,7 @@ import org.jetbrains.compose.resources.stringResource
 
 fun main() = runBlocking {
     loadLibrary("mmkv")
-    DesktopCache.initialize("$ApplicationDir\\mmkv")
+    DesktopCache.initialize("$ApplicationDir/mmkv")
     DesktopCosClient.initialize(COS_CONFIG)
 
     val service = WebSocketService()
