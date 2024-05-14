@@ -21,7 +21,7 @@ class AndroidFileChooser(
     override suspend fun launch(input: FileType) {
         when (input) {
             FileType.IMAGE -> launcher.launch("image/*")
-            FileType.FILE -> launcher.launch(null)
+            FileType.FILE -> launcher.launch("*/*")
         }
     }
 }

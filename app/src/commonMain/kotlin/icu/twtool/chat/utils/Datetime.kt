@@ -19,7 +19,9 @@ private val TimeFormat: DateTimeFormat<LocalDateTime> by lazy {
 
 private val DateFormat: DateTimeFormat<LocalDateTime> by lazy {
     LocalDateTime.Format {
-        date(LocalDate.Formats.ISO)
+        monthNumber()
+        char('-')
+        dayOfMonth()
     }
 }
 

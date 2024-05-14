@@ -24,6 +24,7 @@ import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import java.util.concurrent.Executors
+import androidx.camera.core.ExperimentalGetImage
 
 private const val TAG = "ScanCodeView"
 
@@ -43,6 +44,7 @@ fun rememberCameraPermissionState(): PermissionState {
 }
 
 @OptIn(ExperimentalPermissionsApi::class)
+@androidx.annotation.OptIn(ExperimentalGetImage::class)
 @Composable
 actual fun CameraView(onScanUID: (String) -> Unit) {
     val cameraPermissionState = rememberCameraPermissionState()

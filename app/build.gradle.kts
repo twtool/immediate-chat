@@ -1,3 +1,4 @@
+import org.gradle.kotlin.dsl.support.kotlinCompilerOptions
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 
@@ -22,8 +23,6 @@ kotlin {
             }
         }
     }
-
-    this.
 
     jvm("desktop")
 
@@ -92,6 +91,7 @@ android {
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
     sourceSets["main"].res.srcDirs("src/androidMain/res")
 //    sourceSets["main"].resources.srcDirs("src/commonMain/resources")
+
 
     defaultConfig {
         applicationId = "icu.twtool.chat"
@@ -178,8 +178,12 @@ compose.desktop {
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Exe, TargetFormat.Deb)
-            packageName = "icu.twtool.chat"
+            packageName = "ImmediateChat"
             packageVersion = "1.0.0"
+            includeAllModules = true
+
+            linux {
+            }
 
             // https://github.com/JetBrains/compose-multiplatform/blob/master/tutorials/Native_distributions_and_local_execution/README.md#adding-files-to-packaged-application
             appResourcesRootDir.set(project.layout.projectDirectory.dir("resources"))

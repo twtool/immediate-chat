@@ -1,5 +1,6 @@
 package icu.twtool.chat.view
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Image
@@ -47,6 +48,8 @@ import icu.twtool.chat.cache.loadAccountInfo
 import icu.twtool.chat.cache.produceImageState
 import icu.twtool.chat.components.*
 import icu.twtool.chat.components.file.FileRes
+import icu.twtool.chat.constants.Platform
+import icu.twtool.chat.constants.getPlatform
 import icu.twtool.chat.io.ICFile
 import icu.twtool.chat.io.OpenableFile
 import icu.twtool.chat.io.rememberOpenableFileUtil
@@ -114,7 +117,9 @@ fun ChatView(
                 sendingDialogState = LoadingDialogState("发送中($index/$size)")
                 val delay = launch { delay(200) }
                 val key = "res/${LoggedInState.info?.uid}/${file.hashKey}"
-                getCosClient().putObject(key, file.inputStream(), CommonObjectMetadata(file.size))
+                withContext(Dispatchers.IO) {
+                    getCosClient().putObject(key, file.inputStream(), CommonObjectMetadata(file.size))
+                }
                 state.send(ImageMessageContent(key), info.uid)
                 delay.join()
             }
@@ -189,7 +194,19 @@ fun ChatView(
                     )
                 }
                 if (widthSizeClass < ICWindowWidthSizeClass.Expanded)
-                    ChatViewInput(state.sending, paddingValues) {
+                    ChatViewInput(
+                        state.sending, paddingValues,
+                        sendImage = {
+                            scope.launch {
+                                sendImageFileChooser.launch(FileType.IMAGE)
+                            }
+                        },
+                        sendFile = {
+                            scope.launch {
+                                sendFileChooser.launch(FileType.FILE)
+                            }
+                        }
+                    ) {
                         scope.launch {
                             state.send(it, info.uid)
                         }
@@ -244,6 +261,7 @@ private fun ChatItemAvatar(
             if (widthSizeClass == ICWindowWidthSizeClass.Expanded) showPopup.value = true
             else info?.let(onLookInfo)
         }
+        Spacer(Modifier.requiredHeight(4.dp))
         Text(
             item.createTimeFormat,
             style = MaterialTheme.typography.labelSmall
@@ -578,7 +596,7 @@ fun ChatViewExpandedInput(
     ) {
         Column(Modifier.navigationBarsPadding().imePadding()) {
             Row(Modifier.padding(8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                ChatViewIcon("表情", painterResource(Res.drawable.ic_emoji)) {}
+//                ChatViewIcon("表情", painterResource(Res.drawable.ic_emoji)) {}
                 ChatViewIcon("图片", painterResource(Res.drawable.ic_photo)) { sendImage() }
                 ChatViewIcon("文件", painterResource(Res.drawable.ic_file)) { sendFile(null) }
             }
@@ -609,7 +627,13 @@ fun ChatViewExpandedInput(
 }
 
 @Composable
-fun ChatViewInput(sending: Boolean, paddingValues: PaddingValues, onSend: (value: MessageContent) -> Unit) {
+fun ChatViewInput(
+    sending: Boolean,
+    paddingValues: PaddingValues,
+    sendImage: () -> Unit,
+    sendFile: () -> Unit,
+    onSend: (value: MessageContent) -> Unit
+) {
     var inputValue: String by remember { mutableStateOf("") }
     Surface(
         Modifier.fillMaxWidth()/*.padding(bottom = paddingValues.calculateBottomPadding())*/,
@@ -634,18 +658,34 @@ fun ChatViewInput(sending: Boolean, paddingValues: PaddingValues, onSend: (value
                         },
                 )
 
-                Button(
-                    onClick = {
-                        onSend(PlainMessageContent(inputValue))
-                        inputValue = ""
-                    },
-                    Modifier.align(Alignment.Bottom).height(32.dp),
-                    enabled = !sending,
-                    shape = MaterialTheme.shapes.extraSmall,
-                    contentPadding = PaddingValues(8.dp, 4.dp)
-                ) {
-                    Text("发送")
+                AnimatedVisibility(inputValue.isEmpty()) {
+                    Row(
+                        Modifier.fillMaxHeight(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        ChatViewIcon("图片", painterResource(Res.drawable.ic_photo)) { sendImage() }
+                        if (getPlatform() == Platform.Desktop) {
+                            ChatViewIcon("文件", painterResource(Res.drawable.ic_file)) { sendFile() }
+                        }
+                    }
                 }
+
+                AnimatedVisibility(inputValue.isNotEmpty()) {
+                    Button(
+                        onClick = {
+                            onSend(PlainMessageContent(inputValue))
+                            inputValue = ""
+                        },
+                        Modifier.align(Alignment.Bottom).height(32.dp),
+                        enabled = !sending,
+                        shape = MaterialTheme.shapes.extraSmall,
+                        contentPadding = PaddingValues(8.dp, 4.dp)
+                    ) {
+                        Text("发送")
+                    }
+                }
+
             }
         }
     }
